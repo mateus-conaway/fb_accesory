@@ -15,7 +15,7 @@ def search_players(name: str):
         ORDER BY name_last
         LIMIT 20
         """,
-        (f"%{name}%")
+        (f"%{name}%",) # trailing comma need to make tuple for sqlite execute
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
