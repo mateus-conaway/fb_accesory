@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { searchPlayers } from "../api.ts";
+import type { Player } from "../api.ts";
 
 const MLB_TEAMS = [
   { abbrev: "AZ", name: "Arizona Diamondbacks" },
@@ -33,22 +35,6 @@ const MLB_TEAMS = [
   { abbrev: "WSH", name: "Washington Nationals" },
 ];
 
-// Stub player list for search suggestions — replace with real API call later.
-const PLAYER_STUB = [
-  "Aaron Judge", "Adley Rutschman", "Alex Bregman", "Austin Riley",
-  "Bo Bichette", "Bryce Harper", "Buster Posey", "Cal Raleigh",
-  "Carlos Correa", "Clayton Kershaw", "Cody Bellinger", "Corbin Burnes",
-  "Dylan Cease", "Freddie Freeman", "Gerrit Cole", "Gunnar Henderson",
-  "Ha-Seong Kim", "Jacob deGrom", "Jazz Chisholm", "Jose Abreu",
-  "Jose Altuve", "Jose Ramirez", "Juan Soto", "Julio Rodriguez",
-  "Kyle Tucker", "Luis Arraez", "Luis Castillo", "Marcus Semien",
-  "Matt Olson", "Max Scherzer", "Mookie Betts", "Nolan Arenado",
-  "Paul Goldschmidt", "Pete Alonso", "Rafael Devers", "Randy Arozarena",
-  "Ronald Acuna Jr.", "Sandy Alcantara", "Shohei Ohtani", "Spencer Strider",
-  "Trea Turner", "Wander Franco", "Xander Bogaerts", "Yordan Alvarez",
-  "Zack Wheeler",
-];
-
 function SearchBar({ onSelectPlayer }) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -64,24 +50,28 @@ function SearchBar({ onSelectPlayer }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleInput(e) {
+  async function handleInput(e) {
     const val = e.target.value;
     setQuery(val);
     if (!val.trim()) {
       setSuggestions([]);
       return;
     }
-    const lower = val.toLowerCase();
-    const matches = PLAYER_STUB
-      .filter((name) => name.toLowerCase().includes(lower))
-      .slice(0, 10);
-    setSuggestions(matches);
+    const results = await searchPlayers(val);
+    setSuggestions(results);
+
+    //   const lower = val.toLowerCase();
+    //   const matches = PLAYER_STUB.filter((name) =>
+    //     name.toLowerCase().includes(lower),
+    //   ).slice(0, 10);
+    //   setSuggestions(matches);
+    //
   }
 
-  function handleSelect(name) {
-    setQuery(name);
+  function handleSelect(player: Player) {
+    setQuery(`${player.name_first} ${player.name_last}`);
     setSuggestions([]);
-    if (onSelectPlayer) onSelectPlayer({ name });
+    if (onSelectPlayer) onSelectPlayer({ player });
   }
 
   return (
@@ -95,13 +85,13 @@ function SearchBar({ onSelectPlayer }) {
       />
       {suggestions.length > 0 && (
         <ul className="absolute top-full left-0 right-0 z-50 bg-[#2b2b2b] border border-[#555] rounded mt-1 max-h-64 overflow-y-auto">
-          {suggestions.map((name) => (
+          {suggestions.map((player) => (
             <li
-              key={name}
-              onMouseDown={() => handleSelect(name)}
+              key={player.player_id}
+              onMouseDown={() => handleSelect(player)}
               className="px-3 py-2 text-sm text-white cursor-pointer hover:bg-[#444]"
             >
-              {name}
+              {player.name_first} {player.name_last}
             </li>
           ))}
         </ul>
