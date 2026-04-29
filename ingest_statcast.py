@@ -101,6 +101,8 @@ def execute_player_sql(conn: sqlite3.Connection, player_info: list, position: st
         print(f"Error: {e}")
 
 def upsert_players(conn: sqlite3.Connection, date_string: str) -> None:
+    p_error_count = 0
+    h_error_count = 0
     try:
         date_df = statcast(start_dt=date_string)
         batter_ids = list(set(date_df.get("batter").dropna()))
@@ -110,18 +112,37 @@ def upsert_players(conn: sqlite3.Connection, date_string: str) -> None:
     except Exception as e:
         print(f"Error: {e}.")
 
-    for i in range(len(batter_ids)):
-        batter_df = statcast_batter(start_dt=date_string, end_dt=date_string, player_id=batter_ids[i])
-        batter_info = playerid_reverse_lookup([batter_ids[i]], key_type="mlbam")
-        batter_vals = series_to_sql(batter_info)
-        execute_player_sql(conn, batter_vals, "Hitter")
+    for batter_id in batter_ids:
+        try:
+        # batter_df = statcast_batter(start_dt=date_string, end_dt=date_string, player_id=batter_ids[i])
+            print(batter_id)
+            batter_info = playerid_reverse_lookup([batter_id], key_type="mlbam")
+            if batter_info.empty:
+                print(f"No player lookup result for batter_id: {batter_id}")
+                continue
+            batter_vals = series_to_sql(batter_info)
+            execute_player_sql(conn, batter_vals, "Hitter")
 
-    for i in range(len(pitcher_ids)):
-        pitcher_df = statcast_pitcher(start_dt=date_string, end_dt=date_string, player_id=pitcher_ids[i])
-        pitcher_info = playerid_reverse_lookup([pitcher_ids[i]], key_type="mlbam")
-        pitcher_vals = series_to_sql(pitcher_info)
-        execute_player_sql(conn, pitcher_vals, "Pitcher")
+        except Exception as e:
+            h_error_count += 1
+            print(f"Skipping batter_id: {batter_id} due to error: {e}")
 
+    for pitcher_id in pitcher_ids:
+        try:
+        # pitcher_df = statcast_pitcher(start_dt=date_string, end_dt=date_string, player_id=pitcher_ids[i])
+            print(pitcher_id)
+            pitcher_info = playerid_reverse_lookup([pitcher_id], key_type="mlbam")
+            if pitcher_info.empty:
+                print(f"No player lookup result for pitcher_id: {pitcher_id}")
+                continue
+            pitcher_vals = series_to_sql(pitcher_info)
+            execute_player_sql(conn, pitcher_vals, "Pitcher")
+
+        except Exception as e:
+            p_error_count += 1
+            print(f"Skipping pitcher_id: {pitcher_id} due to error: {e}")
+    print(f"Hitters not found: {h_error_count}")
+    print(f"Pitchers not found: {p_error_count}")
     conn.commit()
 
 def ingest_statcast(date_string: str) -> None:
@@ -155,7 +176,7 @@ def ingest_statcast(date_string: str) -> None:
         description = str(pitches_df["description"].iat[i])
         result_type = str(pitches_df["type"].iat[i])
         release_speed = float(pitches_df["release_speed"].iat[i])
-        at_bat_number = int(pitches_df["at_bat_number"].iat[i])
+        plate_app_number = int(pitches_df["at_bat_number"].iat[i])
         pitch_number = int(pitches_df["pitch_number"].iat[i])
         inning = int(pitches_df["inning"].iat[i])
         inning_topbot = str(pitches_df["inning_topbot"].iat[i])
@@ -172,7 +193,7 @@ def ingest_statcast(date_string: str) -> None:
             continue
         else:
             try:
-                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
+                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speed, plate_app_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speeds[i], plate_app_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
             except Exception as e:
                 print(f"Error: {e}")
 
@@ -197,24 +218,39 @@ def ingest_statcast(date_string: str) -> None:
 # duck db (db geared for analytical processes), persistant db
 # multiple processes/ job queues for doing multiple days at once (parallelism/concurrency)
     conn.commit()
-    conn.close()
     print("Data ingested.")
     print("------------------------------------------------------------")
+    conn.close()
+    
 
 
 def main():
     conn = get_db_connection(DB_PATH)
-    with open(Path(__file__).parent / "schema.sql") as f:
-        conn.executescript(f.read())
+    # with open(Path(__file__).parent / "schema.sql") as f:
+    #     conn.executescript(f.read())
     conn.close()
     
-    # for i in range(0, 15):
-    #     if i < 9:
-    #         date_string = f"2025-06-0{i+1}"
-    #     else:
-    #         date_string = f"2025-06-{i+1}"
-    #     ingest_statcast(conn, date_string) 
-    ingest_statcast("2025-10-13")
+    ingest_statcast("2026-03-27")
+    ingest_statcast("2026-03-28")
+    ingest_statcast("2026-03-29") 
+    ingest_statcast("2026-03-30")
+    ingest_statcast("2026-03-31")
+
+    for i in range(0, 28):
+        if i < 9:
+            date_string = f"2026-04-0{i+1}"
+        else:
+            date_string = f"2026-04-{i+1}"
+        ingest_statcast(date_string)
+
+    ingest_statcast("2026-04-28")
+
+    # ingest_statcast("2025-10-25")
+    # ingest_statcast("2025-10-27")
+    # ingest_statcast("2025-10-28")
+    # ingest_statcast("2025-10-29")
+    # ingest_statcast("2025-10-31")
+    # ingest_statcast("2025-11-01")
     
     # conn.close()
 

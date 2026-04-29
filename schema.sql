@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS pitches (
     result_type TEXT,
     release_speed REAL,
     launch_speed REAL,
-    at_bat_number INTEGER NOT NULL,
+    plate_app_number INTEGER NOT NULL,
     pitch_number INTEGER NOT NULL,
     inning INTEGER NOT NULL,
     inning_topbot TEXT,

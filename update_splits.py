@@ -26,5 +26,14 @@ SO_EVENTS = {"strikeout", "strikeout_double_play"}
 def get_pa_outcome(conn: sqlite3.Connection) -> pd.DataFrame:
     # Get last pitch for each at bat that results in an event
     query = """
-        SELECT p.game_pk, p.game_date, p.game_year, p.batter, p.pitcher, p.stand, p.p_throws, p.pitch_type, p.events, p.result_type,  FROM pitches p
+        SELECT p.game_pk, p.game_date, p.game_year, p.batter, p.pitcher, p.stand, p.p_throws, p.pitch_number, p.pitch_type, p.events, p.result_type 
+        FROM pitches p
+        INNER JOIN (
+            SELECT game_pk, batter, pitcher, at_bat_number, MAX(pitch_number) as max_pitch
+            FROM pitches
+        ) last ON p.game_pk = last.game_pk AND p.batter = last.batter AND p.pitcher = last.pitcher AND p.at_bat_number = last.at_bat_number AND p.pitch_number = last.max_pitch
+        WHERE p.events IS NOT NULL AND p.events != ''; 
     """
+    return pd.read_sql(query, conn)
+
+def compute_splits
