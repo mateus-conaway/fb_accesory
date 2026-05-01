@@ -229,21 +229,23 @@ def main():
     # with open(Path(__file__).parent / "schema.sql") as f:
     #     conn.executescript(f.read())
     conn.close()
+
+    ingest_statcast("2026-03-26")
     
-    ingest_statcast("2026-03-27")
-    ingest_statcast("2026-03-28")
-    ingest_statcast("2026-03-29") 
-    ingest_statcast("2026-03-30")
-    ingest_statcast("2026-03-31")
+    # ingest_statcast("2026-03-27")
+    # ingest_statcast("2026-03-28")
+    # ingest_statcast("2026-03-29") 
+    # ingest_statcast("2026-03-30")
+    # ingest_statcast("2026-03-31")
 
-    for i in range(0, 28):
-        if i < 9:
-            date_string = f"2026-04-0{i+1}"
-        else:
-            date_string = f"2026-04-{i+1}"
-        ingest_statcast(date_string)
+    # for i in range(0, 28):
+    #     if i < 9:
+    #         date_string = f"2026-04-0{i+1}"
+    #     else:
+    #         date_string = f"2026-04-{i+1}"
+    #     ingest_statcast(date_string)
 
-    ingest_statcast("2026-04-28")
+    # ingest_statcast("2026-04-28")
 
     # ingest_statcast("2025-10-25")
     # ingest_statcast("2025-10-27")

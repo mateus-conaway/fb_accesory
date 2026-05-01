@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { searchPlayers } from "../api.ts";
+import { getPlayerStats } from "../api.ts";
 import type { Player } from "../api.ts";
 
 const MLB_TEAMS = [

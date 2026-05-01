@@ -18,3 +18,9 @@ export async function getPlayer(playerId: string) {
   if (!response.ok) throw new Error("Player not found");
   return response.json();
 }
+
+export async function getPlayerStats(playerId: string) {
+  const response = await fetch(`${BASE_URL}/stats/${playerId}`);
+  if (!response.ok) throw new Error("Player stats unavailable");
+  return response.json();
+}
