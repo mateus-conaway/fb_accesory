@@ -14,4 +14,4 @@ app.add_middleware(
 
 app.include_router(players.router, prefix="/players", tags=["players"])
 # app.include_router(games.router, prefix="/games", tags=["games"])
-# app.include_router(stats.router, prefix="/stats", tags=["stats"])
+app.include_router(stats.router, prefix="/stats", tags=["stats"])
