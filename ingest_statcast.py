@@ -110,17 +110,25 @@ def upsert_players(conn: sqlite3.Connection, date_string: str) -> None:
     except Exception as e:
         print(f"Error: {e}.")
 
-    for i in range(len(batter_ids)):
-        batter_df = statcast_batter(start_dt=date_string, end_dt=date_string, player_id=batter_ids[i])
-        batter_info = playerid_reverse_lookup([batter_ids[i]], key_type="mlbam")
-        batter_vals = series_to_sql(batter_info)
-        execute_player_sql(conn, batter_vals, "Hitter")
+    for batter_id in batter_ids:
+        # batter_df = statcast_batter(start_dt=date_string, end_dt=date_string, player_id=batter_id)
+        batter_info = playerid_reverse_lookup([batter_id], key_type="mlbam")
+        print(batter_info)
+        if batter_info.empty:
+            continue
+        else:
+            batter_vals = series_to_sql(batter_info)
+            execute_player_sql(conn, batter_vals, "Hitter")
 
-    for i in range(len(pitcher_ids)):
-        pitcher_df = statcast_pitcher(start_dt=date_string, end_dt=date_string, player_id=pitcher_ids[i])
-        pitcher_info = playerid_reverse_lookup([pitcher_ids[i]], key_type="mlbam")
-        pitcher_vals = series_to_sql(pitcher_info)
-        execute_player_sql(conn, pitcher_vals, "Pitcher")
+    for pitcher_id in pitcher_ids:
+        # pitcher_df = statcast_pitcher(start_dt=date_string, end_dt=date_string, player_id=pitcher_id)
+        pitcher_info = playerid_reverse_lookup([pitcher_id], key_type="mlbam")
+        print(pitcher_info)
+        if pitcher_info.empty:
+            continue
+        else:
+            pitcher_vals = series_to_sql(pitcher_info)
+            execute_player_sql(conn, pitcher_vals, "Pitcher")
 
     conn.commit()
 
@@ -204,19 +212,30 @@ def ingest_statcast(date_string: str) -> None:
 
 def main():
     conn = get_db_connection(DB_PATH)
-    with open(Path(__file__).parent / "schema.sql") as f:
-        conn.executescript(f.read())
-    conn.close()
-    
-    # for i in range(0, 15):
-    #     if i < 9:
-    #         date_string = f"2025-06-0{i+1}"
-    #     else:
-    #         date_string = f"2025-06-{i+1}"
-    #     ingest_statcast(conn, date_string) 
-    ingest_statcast("2025-10-13")
-    
+    # with open(Path(__file__).parent / "schema.sql") as f:
+    #     conn.executescript(f.read())
     # conn.close()
+    
+    # ingest_statcast("2026-03-25")
+    # ingest_statcast("2026-03-26")
+    # ingest_statcast("2026-03-27")
+    # ingest_statcast("2026-03-28")
+    # ingest_statcast("2026-03-29")
+    # ingest_statcast("2026-03-30")
+    for i in range(0, 29):
+        if i < 9:
+            date_string = f"2026-04-0{i+1}"
+        else:
+            date_string = f"2026-04-{i+1}"
+        ingest_statcast(date_string) 
+    for i in range(0, 12):
+        if i < 9:
+            date_string = f"2026-05-0{i+1}"
+        else:
+            date_string = f"2026-05-{i+1}"
+        ingest_statcast(date_string) 
+    
+    conn.close()
 
 if __name__ == "__main__":
      main()
