@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { searchPlayers } from "../api.ts";
+import { getPlayerStats, searchPlayers } from "../api.ts";
 import type { Player } from "../api.ts";
+
+/** Placeholder context until starting pitcher / park come from schedule data */
+const TEST_PITCHER_ID = "685299";
+const TEST_HAND = "R";
+const TEST_PITCH_TYPE = "CH";
+const TEST_BALLPARK = "NYY";
 
 const MLB_TEAMS = [
   { abbrev: "AZ", name: "Arizona Diamondbacks" },
@@ -107,10 +113,43 @@ export default function Navbar({
   onSearchSelect,
 }) {
   const [selectedPlayer, setSelectedPlayer] = useState("");
+  const [selectedSearchPlayer, setSelectedSearchPlayer] =
+    useState<Player | null>(null);
+  const [goLoading, setGoLoading] = useState(false);
+
+  const batterIdForGo =
+    selectedSearchPlayer?.player_id || selectedPlayer || "";
 
   function handleTeamChange(e) {
     onTeamChange(e.target.value);
     setSelectedPlayer("");
+    setSelectedSearchPlayer(null);
+  }
+
+  async function handleGoClick() {
+    if (!batterIdForGo) return;
+    setGoLoading(true);
+    try {
+      const stats = await getPlayerStats(
+        String(batterIdForGo),
+        TEST_PITCHER_ID,
+        TEST_HAND,
+        TEST_PITCH_TYPE,
+        TEST_BALLPARK,
+      );
+      const displayName = selectedSearchPlayer
+        ? `${selectedSearchPlayer.name_first} ${selectedSearchPlayer.name_last}`
+        : String(batterIdForGo);
+      onGoClick({
+        name: displayName,
+        team: selectedTeam,
+        stats,
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGoLoading(false);
+    }
   }
 
   return (
@@ -120,7 +159,12 @@ export default function Navbar({
         Fantasy Scout Report
       </div>
 
-      <SearchBar onSelectPlayer={onSearchSelect} />
+      <SearchBar
+        onSelectPlayer={(data) => {
+          setSelectedSearchPlayer(data.player);
+          if (onSearchSelect) onSearchSelect(data);
+        }}
+      />
 
       {/* Team dropdown */}
       <select
@@ -149,11 +193,12 @@ export default function Navbar({
 
       {/* GO button */}
       <button
-        onClick={() => onGoClick(selectedPlayer)}
-        disabled={!selectedPlayer}
+        type="button"
+        onClick={() => void handleGoClick()}
+        disabled={!batterIdForGo || goLoading}
         className="h-9 px-4 rounded bg-[#d4d4d4] text-[#1a1a1a] text-sm font-semibold hover:bg-[#bcbcbc] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        GO
+        {goLoading ? "…" : "GO"}
       </button>
 
       {/* Account button */}
