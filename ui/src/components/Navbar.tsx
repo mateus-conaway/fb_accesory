@@ -106,25 +106,12 @@ function SearchBar({ onSelectPlayer }) {
   );
 }
 
-export default function Navbar({
-  selectedTeam,
-  onTeamChange,
-  onGoClick,
-  onSearchSelect,
-}) {
-  const [selectedPlayer, setSelectedPlayer] = useState("");
+export default function Navbar({ selectedTeam, onGoClick, onSearchSelect }) {
   const [selectedSearchPlayer, setSelectedSearchPlayer] =
     useState<Player | null>(null);
   const [goLoading, setGoLoading] = useState(false);
 
-  const batterIdForGo =
-    selectedSearchPlayer?.player_id || selectedPlayer || "";
-
-  function handleTeamChange(e) {
-    onTeamChange(e.target.value);
-    setSelectedPlayer("");
-    setSelectedSearchPlayer(null);
-  }
+  const batterIdForGo = selectedSearchPlayer?.player_id || "";
 
   async function handleGoClick() {
     if (!batterIdForGo) return;
@@ -166,36 +153,11 @@ export default function Navbar({
         }}
       />
 
-      {/* Team dropdown */}
-      <select
-        value={selectedTeam}
-        onChange={handleTeamChange}
-        className="h-9 px-2 rounded bg-[#d4d4d4] text-[#1a1a1a] text-sm focus:outline-none cursor-pointer"
-      >
-        <option value="">Team</option>
-        {MLB_TEAMS.map((t) => (
-          <option key={t.abbrev} value={t.abbrev}>
-            {t.abbrev} — {t.name}
-          </option>
-        ))}
-      </select>
-
-      {/* Player dropdown */}
-      <select
-        value={selectedPlayer}
-        onChange={(e) => setSelectedPlayer(e.target.value)}
-        disabled={!selectedTeam}
-        className="h-9 px-2 rounded bg-[#d4d4d4] text-[#1a1a1a] text-sm focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <option value="">Player</option>
-        {/* Roster options populated in a future update */}
-      </select>
-
       {/* GO button */}
       <button
         type="button"
         onClick={() => void handleGoClick()}
-        disabled={!batterIdForGo || goLoading}
+        // disabled={!batterIdForGo || goLoading}
         className="h-9 px-4 rounded bg-[#d4d4d4] text-[#1a1a1a] text-sm font-semibold hover:bg-[#bcbcbc] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {goLoading ? "…" : "GO"}
