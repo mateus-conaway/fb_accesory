@@ -79,7 +79,7 @@ def calculate_stats(plate_apps: list) -> list:
     ) / ab if ab else 0.0
     ops = obp + slg
 
-    return [ab, pa, bb, hbp, k, single, double, triples, home_run, rbi, avg, obp, slg, ops]
+    return [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, rbi, avg, obp, slg, ops]
 
 
 def get_year() -> int | None:

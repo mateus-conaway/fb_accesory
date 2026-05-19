@@ -23,7 +23,7 @@ def get_batter_stats(
     pitch_type: str,
     ballpark: str
 ):
-    """Return seven stat lines (each from calculate_stats) for one batter."""
+    """Return eight stat lines (each from calculate_stats) for one batter."""
     return {
         "season_stats": calculate_stats(
             season_stats(batter_id)
