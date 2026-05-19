@@ -44,13 +44,30 @@ export default function App() {
     setBookmarkedPlayers((prev) => prev.filter((p) => p.name !== player.name));
   }
 
-  function handleGoClick(selectedPlayer) {
-    if (!selectedPlayer) return;
-    const playerData = { name: selectedPlayer, team: selectedTeam };
-    if (focusedSlot === 1) {
-      setPlayerSlot1(playerData);
-    } else {
-      setPlayerSlot2(playerData);
+  function handleGoClick(payload) {
+    if (!payload) return;
+    // Navbar GO sends { name, team, stats } after fetching /stats/{batter_id}
+    if (typeof payload === "object" && payload.stats) {
+      const playerData = {
+        name: payload.name,
+        team: payload.team ?? selectedTeam,
+        stats: payload.stats,
+      };
+      if (focusedSlot === 1) {
+        setPlayerSlot1(playerData);
+      } else {
+        setPlayerSlot2(playerData);
+      }
+      return;
+    }
+    // Legacy: dropdown-only label/id string
+    if (typeof payload === "string" && payload) {
+      const playerData = { name: payload, team: selectedTeam };
+      if (focusedSlot === 1) {
+        setPlayerSlot1(playerData);
+      } else {
+        setPlayerSlot2(playerData);
+      }
     }
   }
 
