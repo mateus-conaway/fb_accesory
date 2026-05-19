@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import { searchPlayers } from "../api.ts";
+import { getPlayerStats, searchPlayers } from "../api.ts";
 import type { Player } from "../api.ts";
+
+/** Placeholder context until starting pitcher / park come from schedule data */
+const TEST_PITCHER_ID = "685299";
+const TEST_HAND = "R";
+const TEST_PITCH_TYPE = "CH";
+const TEST_BALLPARK = "NYY";
 
 const MLB_TEAMS = [
   { abbrev: "AZ", name: "Arizona Diamondbacks" },
@@ -100,17 +106,37 @@ function SearchBar({ onSelectPlayer }) {
   );
 }
 
-export default function Navbar({
-  selectedTeam,
-  onTeamChange,
-  onGoClick,
-  onSearchSelect,
-}) {
-  const [selectedPlayer, setSelectedPlayer] = useState("");
+export default function Navbar({ selectedTeam, onGoClick, onSearchSelect }) {
+  const [selectedSearchPlayer, setSelectedSearchPlayer] =
+    useState<Player | null>(null);
+  const [goLoading, setGoLoading] = useState(false);
 
-  function handleTeamChange(e) {
-    onTeamChange(e.target.value);
-    setSelectedPlayer("");
+  const batterIdForGo = selectedSearchPlayer?.player_id || "";
+
+  async function handleGoClick() {
+    if (!batterIdForGo) return;
+    setGoLoading(true);
+    try {
+      const stats = await getPlayerStats(
+        String(batterIdForGo),
+        TEST_PITCHER_ID,
+        TEST_HAND,
+        TEST_PITCH_TYPE,
+        TEST_BALLPARK,
+      );
+      const displayName = selectedSearchPlayer
+        ? `${selectedSearchPlayer.name_first} ${selectedSearchPlayer.name_last}`
+        : String(batterIdForGo);
+      onGoClick({
+        name: displayName,
+        team: selectedTeam,
+        stats,
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGoLoading(false);
+    }
   }
 
   return (
@@ -120,40 +146,21 @@ export default function Navbar({
         Fantasy Scout Report
       </div>
 
-      <SearchBar onSelectPlayer={onSearchSelect} />
-
-      {/* Team dropdown */}
-      <select
-        value={selectedTeam}
-        onChange={handleTeamChange}
-        className="h-9 px-2 rounded bg-[#d4d4d4] text-[#1a1a1a] text-sm focus:outline-none cursor-pointer"
-      >
-        <option value="">Team</option>
-        {MLB_TEAMS.map((t) => (
-          <option key={t.abbrev} value={t.abbrev}>
-            {t.abbrev} — {t.name}
-          </option>
-        ))}
-      </select>
-
-      {/* Player dropdown */}
-      <select
-        value={selectedPlayer}
-        onChange={(e) => setSelectedPlayer(e.target.value)}
-        disabled={!selectedTeam}
-        className="h-9 px-2 rounded bg-[#d4d4d4] text-[#1a1a1a] text-sm focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <option value="">Player</option>
-        {/* Roster options populated in a future update */}
-      </select>
+      <SearchBar
+        onSelectPlayer={(data) => {
+          setSelectedSearchPlayer(data.player);
+          if (onSearchSelect) onSearchSelect(data);
+        }}
+      />
 
       {/* GO button */}
       <button
-        onClick={() => onGoClick(selectedPlayer)}
-        disabled={!selectedPlayer}
+        type="button"
+        onClick={() => void handleGoClick()}
+        // disabled={!batterIdForGo || goLoading}
         className="h-9 px-4 rounded bg-[#d4d4d4] text-[#1a1a1a] text-sm font-semibold hover:bg-[#bcbcbc] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        GO
+        {goLoading ? "…" : "GO"}
       </button>
 
       {/* Account button */}
