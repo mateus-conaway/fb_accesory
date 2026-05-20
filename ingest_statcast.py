@@ -234,7 +234,9 @@ def main():
     #     else:
     #         date_string = f"2026-05-{i+1}"
     #     ingest_statcast(date_string) 
-    ingest_statcast("2026-05-16")
+    ingest_statcast("2026-05-17")
+    ingest_statcast("2026-05-18")
+    ingest_statcast("2026-05-19")
     
     conn.close()
 

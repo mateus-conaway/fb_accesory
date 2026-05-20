@@ -50,8 +50,8 @@ export default function App() {
     if (typeof payload === "object" && payload.stats) {
       const playerData = {
         name: payload.name,
-        team: payload.team ?? selectedTeam,
         stats: payload.stats,
+        position: payload.position,
       };
       if (focusedSlot === 1) {
         setPlayerSlot1(playerData);
@@ -82,8 +82,8 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen bg-[#d4d4d4] overflow-hidden">
       <Navbar
-        selectedTeam={selectedTeam}
-        onTeamChange={setSelectedTeam}
+        // selectedTeam={selectedTeam}
+        // onTeamChange={setSelectedTeam}
         onGoClick={handleGoClick}
         onSearchSelect={handleSearchSelect}
       />
