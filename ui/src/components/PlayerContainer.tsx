@@ -1,7 +1,9 @@
 import React from "react";
-import type { BatterStatLines } from "../api.ts";
+import { getPlayer } from "../api.ts";
+import type { HitterStatLines } from "../api.ts";
+import type { PitcherStatLines } from "../api.ts";
 
-const STATLINE_KEYS: (keyof BatterStatLines)[] = [
+const HITTER_STATLINE_KEYS: (keyof HitterStatLines)[] = [
   "season_stats",
   "career_vs_pitcher",
   "season_vs_pitcher",
@@ -10,6 +12,18 @@ const STATLINE_KEYS: (keyof BatterStatLines)[] = [
   "season_vs_offspeed",
   "career_at_ballpark",
   "season_at_ballpark",
+];
+
+const PITCHER_STATLINE_KEYS: (keyof PitcherStatLines)[] = [
+  "career_vs_hitter_one",
+  "career_vs_hitter_two",
+  "career_vs_hitter_three",
+  "career_vs_hitter_four",
+  "career_vs_hitter_five",
+  "career_vs_hitter_six",
+  "career_vs_hitter_seven",
+  "career_vs_hitter_eight",
+  "career_vs_hitter_nine",
 ];
 
 /** [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, rbi, avg, obp, slg, ops] */
@@ -39,8 +53,15 @@ function formatStatline(arr: number[]): string[] {
 
 export default function PlayerContainer({ playerData, onBookmark, isFocused }) {
   const displayName = playerData ? playerData.name : "Player Name";
-  const stats = playerData?.stats as BatterStatLines | undefined;
+  console.log(playerData);
+  const position = playerData?.position;
 
+  const stats =
+    position === "Hitter"
+      ? (playerData?.stats as HitterStatLines | undefined)
+      : (playerData?.stats as PitcherStatLines | undefined);
+  const keys =
+    position === "Hitter" ? HITTER_STATLINE_KEYS : PITCHER_STATLINE_KEYS;
   return (
     <div
       className={`flex flex-col flex-1 min-w-0 rounded border-2 transition-all ${
@@ -73,7 +94,7 @@ export default function PlayerContainer({ playerData, onBookmark, isFocused }) {
           {!stats ? (
             <p className="text-xs text-[#555]">Select a player and click GO</p>
           ) : (
-            STATLINE_KEYS.map((key) => {
+            keys.map((key) => {
               const arr = stats[key];
               if (!arr) return null;
               return (

@@ -1,12 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
-import { getPlayerStats, searchPlayers } from "../api.ts";
-import type { Player } from "../api.ts";
+import { getHitterStats, getPitcherStats, searchPlayers } from "../api.ts";
+import type { HitterStatLines, PitcherStatLines, Player } from "../api.ts";
 
 /** Placeholder context until starting pitcher / park come from schedule data */
-const TEST_PITCHER_ID = "685299";
+const TEST_PITCHER_ID = "656492";
 const TEST_HAND = "R";
 const TEST_PITCH_TYPE = "CH";
 const TEST_BALLPARK = "NYY";
+const TEST_ONE = "701807";
+const TEST_TWO = "666182";
+const TEST_THREE = "665742";
+const TEST_FOUR = "668901";
+const TEST_FIVE = "543760";
+const TEST_SIX = "621438";
+const TEST_SEVEN = "703492";
+const TEST_EIGHT = "683146";
+const TEST_NINE = "620443";
 
 const MLB_TEAMS = [
   { abbrev: "AZ", name: "Arizona Diamondbacks" },
@@ -106,31 +115,50 @@ function SearchBar({ onSelectPlayer }) {
   );
 }
 
-export default function Navbar({ selectedTeam, onGoClick, onSearchSelect }) {
+export default function Navbar({ onGoClick, onSearchSelect }) {
   const [selectedSearchPlayer, setSelectedSearchPlayer] =
     useState<Player | null>(null);
   const [goLoading, setGoLoading] = useState(false);
 
-  const batterIdForGo = selectedSearchPlayer?.player_id || "";
+  const playerIdForGo = selectedSearchPlayer?.player_id || "";
 
   async function handleGoClick() {
-    if (!batterIdForGo) return;
+    let stats: HitterStatLines | PitcherStatLines;
+    if (!playerIdForGo) return;
     setGoLoading(true);
     try {
-      const stats = await getPlayerStats(
-        String(batterIdForGo),
-        TEST_PITCHER_ID,
-        TEST_HAND,
-        TEST_PITCH_TYPE,
-        TEST_BALLPARK,
-      );
+      console.log(selectedSearchPlayer.position);
+      stats =
+        selectedSearchPlayer.position === "Hitter"
+          ? await getHitterStats(
+              String(playerIdForGo),
+              TEST_PITCHER_ID,
+              TEST_HAND,
+              TEST_PITCH_TYPE,
+              TEST_BALLPARK,
+            )
+          : await getPitcherStats(
+              String(playerIdForGo),
+              TEST_BALLPARK,
+              TEST_HAND,
+              TEST_PITCH_TYPE,
+              TEST_ONE,
+              TEST_TWO,
+              TEST_THREE,
+              TEST_FOUR,
+              TEST_FIVE,
+              TEST_SIX,
+              TEST_SEVEN,
+              TEST_EIGHT,
+              TEST_NINE,
+            );
       const displayName = selectedSearchPlayer
         ? `${selectedSearchPlayer.name_first} ${selectedSearchPlayer.name_last}`
-        : String(batterIdForGo);
+        : String(playerIdForGo);
       onGoClick({
         name: displayName,
-        team: selectedTeam,
         stats,
+        position: selectedSearchPlayer.position,
       });
     } catch (err) {
       console.error(err);
