@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 
-from api.services.stats_service import (
+from api.services.batter_stats_service import (
     calculate_stats,
     season_stats,
     career_at_ballpark,

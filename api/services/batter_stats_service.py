@@ -113,7 +113,7 @@ def career_vs_pitcher(batter_id: int, pitcher_id: int):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT * FROM pitches WHERE
         AND batter = ? AND pitcher = ?;
         """,
         (batter_id, pitcher_id),

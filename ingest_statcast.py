@@ -21,6 +21,7 @@ PITCH_COLS = [
     "pitch_name",
     "events",
     "description",
+    "des",
     "type",
     "release_speed",
     "launch_speed",
@@ -95,7 +96,7 @@ def player_sql(conn: sqlite3.Connection, player_info: list) -> None:
 
 def execute_player_sql(conn: sqlite3.Connection, player_info: list, position: str) -> None:
     try:
-        conn.execute("INSERT OR REPLACE INTO players (player_id, name_last, name_first, name_full, position, mlb_played_first, mlb_played_last) VALUES (?,?,?,?,?,?,?)", (player_info[0], player_info[1], player_info[2], f"{player_info[2]} {player_info[1]}", position, player_info[3], player_info[4]))
+        conn.execute("INSERT OR IGNORE INTO players (player_id, name_last, name_first, name_full, position, mlb_played_first, mlb_played_last) VALUES (?,?,?,?,?,?,?)", (player_info[0], player_info[1], player_info[2], f"{player_info[2]} {player_info[1]}", position, player_info[3], player_info[4]))
         print("success!")
     except Exception as e:
         print(f"Error: {e}")
@@ -160,6 +161,7 @@ def ingest_statcast(date_string: str) -> None:
         p_throws = str(pitches_df["p_throws"].iat[i])
         pitch_type = PITCH_TYPES.get(str(pitches_df["pitch_type"].iat[i]))
         events = str(pitches_df["events"].iat[i])
+        story_description = str(pitches_df["des"].iat[1])
         description = str(pitches_df["description"].iat[i])
         result_type = str(pitches_df["type"].iat[i])
         release_speed = float(pitches_df["release_speed"].iat[i])
@@ -180,7 +182,7 @@ def ingest_statcast(date_string: str) -> None:
             continue
         else:
             try:
-                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
+                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, story_description, result_type, release_speed, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, story_description, result_type, release_speed, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
             except Exception as e:
                 print(f"Error: {e}")
 
@@ -211,7 +213,7 @@ def ingest_statcast(date_string: str) -> None:
 
 
 def main():
-    conn = get_db_connection(DB_PATH)
+    # conn = get_db_connection(DB_PATH)
     # with open(Path(__file__).parent / "schema.sql") as f:
     #     conn.executescript(f.read())
     # conn.close()
@@ -222,23 +224,21 @@ def main():
     # ingest_statcast("2026-03-28")
     # ingest_statcast("2026-03-29")
     # ingest_statcast("2026-03-30")
-    # for i in range(0, 29):
-    #     if i < 9:
-    #         date_string = f"2026-04-0{i+1}"
-    #     else:
-    #         date_string = f"2026-04-{i+1}"
-    #     ingest_statcast(date_string) 
-    # for i in range(0, 12):
-    #     if i < 9:
-    #         date_string = f"2026-05-0{i+1}"
-    #     else:
-    #         date_string = f"2026-05-{i+1}"
-    #     ingest_statcast(date_string) 
-    ingest_statcast("2026-05-17")
-    ingest_statcast("2026-05-18")
-    ingest_statcast("2026-05-19")
+    # ingest_statcast("2026-03-31")
+
+    for i in range(0, 29):
+        if i < 9:
+            date_string = f"2026-04-0{i+1}"
+        else:
+            date_string = f"2026-04-{i+1}"
+        ingest_statcast(date_string) 
+    for i in range(0, 19):
+        if i < 9:
+            date_string = f"2026-05-0{i+1}"
+        else:
+            date_string = f"2026-05-{i+1}"
+        ingest_statcast(date_string) 
     
-    conn.close()
 
 if __name__ == "__main__":
      main()

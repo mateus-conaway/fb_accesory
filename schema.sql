@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS pitches (
     pitch_name TEXT,
     events TEXT,
     description TEXT,
+    story_description TEXT,
     result_type TEXT,
     release_speed REAL,
     launch_speed REAL,
