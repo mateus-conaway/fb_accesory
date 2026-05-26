@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="fantasy_baseball.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="5073"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="ballparks" custom_title="0" dock_id="1" table="4,9:mainballparks"/><dock_state state="000000ff00000000fd00000001000000020000000000000000fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000011700ffffff000000000000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1*">SELECT * from pitches
-where batter = 646240 and pitcher = 686218;</sql><sql name="SQL 2*">select * from players
-where name_full = 'rafael devers';</sql><sql name="SQL 3*">select * from players
-where name_full = 'emmet sheehan';</sql><sql name="SQL 4*">select * from games
-where home_team = 'SF' or away_team = 'SF'
-order by game_date asc;</sql><sql name="SQL 5*">select distinct game_date from games
-order by game_date asc;</sql><current_tab id="2"/></tab_sql></sqlb_project>
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="fantasy_baseball.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="5054"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="ballparks" custom_title="0" dock_id="1" table="4,9:mainballparks"/><dock_state state="000000ff00000000fd00000001000000020000000000000000fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000ffffffff0000011700ffffff000000000000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1*">select game_date, at_bat_number, events, inning, outs_when_up from pitches where at_bat_number = 23 and game_date = '2026-05-13' and events != 0 and game_year = 2026
+        order by at_bat_number desc
+        limit 1;</sql><sql name="SQL 2*">select distinct game_date from pitches where pitcher = 608331
+order by game_date</sql><sql name="SQL 3*">select * from pitches</sql><sql name="SQL 4*">select at_bat_number, events, inning, inning_topbot, outs_when_up 
+from pitches where home_team = 'BAL' and game_date = '2026-05-13' and events != 0
+order by at_bat_number desc;
+</sql><sql name="SQL 5*">select * from pitches where pitcher = 657277 and game_date = '2026-04-30'
+order by at_bat_number desc;
+</sql><current_tab id="4"/></tab_sql></sqlb_project>

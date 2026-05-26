@@ -1,4 +1,3 @@
-
 import sqlite3
 from pathlib import Path
 
@@ -50,35 +49,107 @@ PA_EVENTS = {
     "field_out",
 }
 
-
 def get_db() -> sqlite3.Connection:
     conn = sqlite3.connect(Path(__file__).parent.parent.parent / "fantasy_baseball.db")
     conn.row_factory = sqlite3.Row # access columns by name
     return conn
 
-def calculate_innings_pitched(plate_apps: list) -> str:
-    outs = 0
-    for plate_app in plate_apps:
-        outs += 1 if plate_app["events"] in SINGLE_OUT_EVENTS else 0
-        outs += 2 if plate_app["events"] in DOUBLE_OUT_EVENTS else 0
-        outs += 3 if plate_app["events"] in TRIPLE_OUT_EVENTS else 0
-    
-    remainder_innings = outs % 3
-    full_innings = int((outs - remainder_innings) / 3)
-
-    innings_str = f"{full_innings}.{remainder_innings} ({outs} outs)"
-    return innings_str
-
-def main():
+def get_year() -> int | None:
     conn = get_db()
+    row = conn.execute(
+        """
+        SELECT game_year FROM pitches
+        ORDER BY game_date DESC
+        LIMIT 1
+        """
+    ).fetchone()
+    conn.close()
+    return row["game_year"] if row else None
+
+def calculate_outs(pitcher: int, game_date: str) -> str:
+    conn = get_db()
+    year = get_year()
+
+    first_ab = conn.execute(
+        """
+        select game_pk, at_bat_number, events, inning, outs_when_up from pitches where pitcher = ? and game_date = ? and events != 0 and game_year = ?
+        order by at_bat_number
+        limit 1;
+        """, (pitcher, game_date, year),
+    ).fetchall()
+    last_ab = conn.execute(
+        """
+        select game_pk, at_bat_number, events, inning, outs_when_up from pitches where pitcher = ? and game_date = ? and events != 0 and game_year = ?
+        order by at_bat_number desc
+        limit 1;
+        """, (pitcher, game_date, year),
+    ).fetchall()
+
+    last_ab = [dict(row) for row in last_ab][0]
+    first_ab = [dict(row) for row in first_ab][0]
+
+    next_ab = conn.execute(
+        """
+        select game_pk, at_bat_number, events, inning, outs_when_up from pitches where at_bat_number = ? and game_date = ? and events != 0 and game_year = ?
+        order by at_bat_number desc
+        limit 1;
+        """, (last_ab["at_bat_number"] + 1, game_date, year),
+    ).fetchall()
+
+    next_ab = [dict(row) for row in next_ab][0]
+
+    inning = last_ab["inning"] - first_ab["inning"]
+    outs = last_ab["outs_when_up"] - first_ab["outs_when_up"]
+
+    outs += 1 if last_ab["events"] in SINGLE_OUT_EVENTS else 0
+    outs += 2 if last_ab["events"] in DOUBLE_OUT_EVENTS else 0
+    outs += 3 if last_ab["events"] in TRIPLE_OUT_EVENTS else 0
+
+    if last_ab["outs_when_up"] != next_ab["outs_when_up"] and (last_ab["game_pk"] == next_ab["game_pk"]):
+        if next_ab["outs_when_up"] == 0:
+            outs += (3 - last_ab["outs_when_up"])
+        else:
+            outs += (next_ab["outs_when_up"] - last_ab["outs_when_up"])
+    if outs == 3:
+        inning += 1
+        outs = 0
+    if outs < 0:
+        inning -= 1
+        outs = 3 + outs
+
+    total_outs = (inning * 3) + outs
+    return total_outs
+
+def calculate_innings_pitched(pitcher):
+    conn = get_db()
+    outs = 0
     rows = conn.execute(
         """
-            select * from pitches where pitcher = 657277 and game_date = '2026-04-30';
-        """
-    )
+        select distinct game_date from pitches where pitcher = ?
+        order by game_date
+        """, (pitcher,)
+    ).fetchall()
+    conn.close()
 
-    result = calculate_innings_pitched(rows)
-    print(result)
+    rows = [dict(row) for row in rows]        
+
+    for row in rows: 
+        outs += calculate_outs(pitcher, row["game_date"])
+    return f"{int(outs/3)}.{(outs % 3)}"
+
+def calculate_runs_allowed(pitcher):
+    conn = get_db()
+    runs = 0
+    rows = conn.execute()
+
+def main():
+    
+    
+    # result = calculate_outs(657277, '2026-03-25')
+    # print(result)
+
+    result2 = calculate_innings_pitched(608331)
+    print(result2)
 
 if __name__ == "__main__":
     main()
