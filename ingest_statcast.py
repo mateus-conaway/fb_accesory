@@ -108,6 +108,9 @@ def upsert_players(conn: sqlite3.Connection, date_string: str) -> None:
         pitcher_ids = list(set(date_df.get("pitcher").dropna()))
         batter_ids = [int(batter) for batter in batter_ids]
         pitcher_ids = [int(pitcher) for pitcher in pitcher_ids]
+        game_pks = list(set(date_df.get("game_pk").dropna()))
+        game_pks = [int(game_pk) for game_pk in game_pks]
+        
     except Exception as e:
         print(f"Error: {e}.")
 
@@ -130,8 +133,11 @@ def upsert_players(conn: sqlite3.Connection, date_string: str) -> None:
         else:
             pitcher_vals = series_to_sql(pitcher_info)
             execute_player_sql(conn, pitcher_vals, "Pitcher")
-
+    
     conn.commit()
+
+
+
 
 def ingest_statcast(date_string: str) -> None:
     conn = get_db_connection(DB_PATH)
@@ -195,6 +201,7 @@ def ingest_statcast(date_string: str) -> None:
     games_df.to_csv("games_df.csv", index=True)
 
     players_list = upsert_players(conn, date_string)
+    assign_teams(conn, games_df)
 
     for i in range(len(games_df)):
         try:
@@ -211,6 +218,55 @@ def ingest_statcast(date_string: str) -> None:
     print("Data ingested.")
     print("------------------------------------------------------------")
 
+def assign_teams(conn: sqlite3.Connection, games_list: pd.DataFrame) -> None:
+    topbot = ['Top', 'Bot']
+    for game in games_list.itertuples(index=False):
+        game_pk = int(game.game_pk)
+        away_batters = conn.execute(
+            """
+                SELECT DISTINCT pitches.batter, pitches.away_team from pitches
+                JOIN players on pitches.batter = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[0])
+        ).fetchall()
+        home_batters = conn.execute(
+            """
+                SELECT DISTINCT pitches.batter, pitches.home_team from pitches
+                JOIN players on pitches.batter = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[1])
+        ).fetchall()
+        away_pitchers = conn.execute(
+            """
+                SELECT DISTINCT pitches.pitcher, pitches.away_team from pitches
+                JOIN players on pitches.pitcher = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[1])
+        ).fetchall()
+        home_pitchers = conn.execute(
+            """
+                SELECT DISTINCT pitches.pitcher, pitches.home_team from pitches
+                JOIN players on pitches.pitcher = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[0])
+        ).fetchall()
+
+        players = away_batters + home_batters + away_pitchers + home_pitchers
+
+        for player in players:
+            player_id = int(player[0])
+            team = str(player[1])
+            conn.execute(
+                """
+                    UPDATE players
+                    SET team_abbrev = COALESCE(team_abbrev, ?)
+                    WHERE player_id = ?
+                """, (team, player_id))
+
+        
+    
+
+
 
 def main():
     # conn = get_db_connection(DB_PATH)
@@ -218,26 +274,27 @@ def main():
     #     conn.executescript(f.read())
     # conn.close()
     
-    # ingest_statcast("2026-03-25")
+
+
+    # ingest_statcast("2026-05-20")
     # ingest_statcast("2026-03-26")
     # ingest_statcast("2026-03-27")
     # ingest_statcast("2026-03-28")
     # ingest_statcast("2026-03-29")
-    ingest_statcast("2026-04-30")
     # ingest_statcast("2026-03-31")
 
-    # for i in range(0, 29):
-    #     if i < 9:
-    #         date_string = f"2026-04-0{i+1}"
-    #     else:
-    #         date_string = f"2026-04-{i+1}"
-    #     ingest_statcast(date_string) 
-    # for i in range(0, 19):
-    #     if i < 9:
-    #         date_string = f"2026-05-0{i+1}"
-    #     else:
-    #         date_string = f"2026-05-{i+1}"
-    #     ingest_statcast(date_string) 
+    for i in range(20, 28):
+        if i < 9:
+            date_string = f"2026-04-0{i+1}"
+        else:
+            date_string = f"2026-04-{i+1}"
+        ingest_statcast(date_string) 
+    for i in range(0, 19):
+        if i < 9:
+            date_string = f"2026-05-0{i+1}"
+        else:
+            date_string = f"2026-05-{i+1}"
+        ingest_statcast(date_string) 
     
 
 if __name__ == "__main__":
