@@ -28,3 +28,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# db file
+fantasy_baseball.db
+fantasy_baseball.db-journal
+*.sqbpro
