@@ -12,6 +12,11 @@ from api.services.batter_stats_service import (
     season_vs_pitcher,
 )
 
+from api.services.pitcher_stats_service import (
+    get_earned_runs,
+    calculate_innings_pitched,
+)
+
 router = APIRouter()
 
 @router.get("/pitcher/{pitcher_id}")
@@ -31,6 +36,7 @@ def get_pitcher_stats(
     hitter_nine: int
 ):
     return {
+        "era": calculate_era(pitcher_id),
         "career_vs_hitter_one": calculate_stats(
             career_vs_pitcher(hitter_one, pitcher_id)
         ),

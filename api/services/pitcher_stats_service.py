@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+import statsapi
 
 SINGLE_EVENT = {"single"}
 DOUBLE_EVENT = {"double"}
@@ -137,10 +138,26 @@ def calculate_innings_pitched(pitcher):
         outs += calculate_outs(pitcher, row["game_date"])
     return f"{int(outs/3)}.{(outs % 3)}"
 
-def calculate_runs_allowed(pitcher):
+def get_earned_runs(pitcher: int, game_pk: int) -> int:
     conn = get_db()
-    runs = 0
-    rows = conn.execute()
+    inning_half = conn.execute(
+        """
+            select distinct inning_topbot from pitches where game_pk = ? and pitcher = ?
+            limit 1;
+        """, (game_pk, pitcher)
+    ).fetchone()
+    if inning_half is None:
+        return None
+    side = 'home' if inning_half['inning_topbot'] == 'Top' else 'away'
+
+    er = statsapi.get("game", {"gamePk": game_pk})["liveData"]["boxscore"]["teams"][f"{side}"]['players'][f"ID{str(pitcher)}"]["stats"]["pitching"]["earnedRuns"]
+
+    return er
+
+def calculate_era(pitcher: int, game_pk: int) -> float:
+    er = get_earned_runs(pitcher, game_pk)
+    innings = calculate_innings_pitched(pitcher)
+    return (er * 9)/ innings
 
 def main():
     
@@ -148,8 +165,9 @@ def main():
     # result = calculate_outs(657277, '2026-03-25')
     # print(result)
 
-    result2 = calculate_innings_pitched(608331)
-    print(result2)
+    # result2 = calculate_innings_pitched(608331)
+    # print(result2)
+    print(get_earned_runs(657277, 823244))
 
 if __name__ == "__main__":
     main()
