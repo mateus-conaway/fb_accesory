@@ -198,7 +198,7 @@ def ingest_statcast(date_string: str) -> None:
             df = df[df[col].notna()]
 
     games_df = df[["game_pk", "game_date", "game_year", "home_team", "away_team"]].drop_duplicates()
-    games_df.to_csv("games_df.csv", index=True)
+    # games_df.to_csv("games_df.csv", index=True)
 
     players_list = upsert_players(conn, date_string)
     assign_teams(conn, games_df)
