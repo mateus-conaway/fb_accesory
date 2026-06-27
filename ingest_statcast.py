@@ -21,6 +21,7 @@ PITCH_COLS = [
     "pitch_name",
     "events",
     "description",
+    "des",
     "type",
     "release_speed",
     "launch_speed",
@@ -95,7 +96,7 @@ def player_sql(conn: sqlite3.Connection, player_info: list) -> None:
 
 def execute_player_sql(conn: sqlite3.Connection, player_info: list, position: str) -> None:
     try:
-        conn.execute("INSERT OR REPLACE INTO players (player_id, name_last, name_first, name_full, position, mlb_played_first, mlb_played_last) VALUES (?,?,?,?,?,?,?)", (player_info[0], player_info[1], player_info[2], f"{player_info[2]} {player_info[1]}", position, player_info[3], player_info[4]))
+        conn.execute("INSERT OR IGNORE INTO players (player_id, name_last, name_first, name_full, position, mlb_played_first, mlb_played_last) VALUES (?,?,?,?,?,?,?)", (player_info[0], player_info[1], player_info[2], f"{player_info[2]} {player_info[1]}", position, player_info[3], player_info[4]))
         print("success!")
     except Exception as e:
         print(f"Error: {e}")
@@ -107,6 +108,9 @@ def upsert_players(conn: sqlite3.Connection, date_string: str) -> None:
         pitcher_ids = list(set(date_df.get("pitcher").dropna()))
         batter_ids = [int(batter) for batter in batter_ids]
         pitcher_ids = [int(pitcher) for pitcher in pitcher_ids]
+        game_pks = list(set(date_df.get("game_pk").dropna()))
+        game_pks = [int(game_pk) for game_pk in game_pks]
+        
     except Exception as e:
         print(f"Error: {e}.")
 
@@ -129,8 +133,11 @@ def upsert_players(conn: sqlite3.Connection, date_string: str) -> None:
         else:
             pitcher_vals = series_to_sql(pitcher_info)
             execute_player_sql(conn, pitcher_vals, "Pitcher")
-
+    
     conn.commit()
+
+
+
 
 def ingest_statcast(date_string: str) -> None:
     conn = get_db_connection(DB_PATH)
@@ -160,6 +167,7 @@ def ingest_statcast(date_string: str) -> None:
         p_throws = str(pitches_df["p_throws"].iat[i])
         pitch_type = PITCH_TYPES.get(str(pitches_df["pitch_type"].iat[i]))
         events = str(pitches_df["events"].iat[i])
+        story_description = str(pitches_df["des"].iat[1])
         description = str(pitches_df["description"].iat[i])
         result_type = str(pitches_df["type"].iat[i])
         release_speed = float(pitches_df["release_speed"].iat[i])
@@ -180,7 +188,7 @@ def ingest_statcast(date_string: str) -> None:
             continue
         else:
             try:
-                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, release_speed, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
+                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, story_description, result_type, release_speed, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, story_description, result_type, release_speed, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
             except Exception as e:
                 print(f"Error: {e}")
 
@@ -190,9 +198,10 @@ def ingest_statcast(date_string: str) -> None:
             df = df[df[col].notna()]
 
     games_df = df[["game_pk", "game_date", "game_year", "home_team", "away_team"]].drop_duplicates()
-    games_df.to_csv("games_df.csv", index=True)
+    # games_df.to_csv("games_df.csv", index=True)
 
     players_list = upsert_players(conn, date_string)
+    assign_teams(conn, games_df)
 
     for i in range(len(games_df)):
         try:
@@ -209,36 +218,98 @@ def ingest_statcast(date_string: str) -> None:
     print("Data ingested.")
     print("------------------------------------------------------------")
 
+def assign_teams(conn: sqlite3.Connection, games_list: pd.DataFrame) -> None:
+    topbot = ['Top', 'Bot']
+    for game in games_list.itertuples(index=False):
+        game_pk = int(game.game_pk)
+        away_batters = conn.execute(
+            """
+                SELECT DISTINCT pitches.batter, pitches.away_team from pitches
+                JOIN players on pitches.batter = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[0])
+        ).fetchall()
+        home_batters = conn.execute(
+            """
+                SELECT DISTINCT pitches.batter, pitches.home_team from pitches
+                JOIN players on pitches.batter = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[1])
+        ).fetchall()
+        away_pitchers = conn.execute(
+            """
+                SELECT DISTINCT pitches.pitcher, pitches.away_team from pitches
+                JOIN players on pitches.pitcher = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[1])
+        ).fetchall()
+        home_pitchers = conn.execute(
+            """
+                SELECT DISTINCT pitches.pitcher, pitches.home_team from pitches
+                JOIN players on pitches.pitcher = players.player_id
+                WHERE pitches.game_pk = ? and pitches.inning_topbot = ?
+            """, (game_pk, topbot[0])
+        ).fetchall()
+
+        players = away_batters + home_batters + away_pitchers + home_pitchers
+
+        for player in players:
+            player_id = int(player[0])
+            team = str(player[1])
+            conn.execute(
+                """
+                    UPDATE players
+                    SET team_abbrev = COALESCE(team_abbrev, ?)
+                    WHERE player_id = ?
+                """, (team, player_id))
+
+        
+    
+
+
 
 def main():
-    conn = get_db_connection(DB_PATH)
+    # conn = get_db_connection(DB_PATH)
     # with open(Path(__file__).parent / "schema.sql") as f:
     #     conn.executescript(f.read())
     # conn.close()
     
+
+
     # ingest_statcast("2026-03-25")
     # ingest_statcast("2026-03-26")
     # ingest_statcast("2026-03-27")
     # ingest_statcast("2026-03-28")
     # ingest_statcast("2026-03-29")
     # ingest_statcast("2026-03-30")
+    # ingest_statcast("2026-03-31")
+
     # for i in range(0, 29):
     #     if i < 9:
     #         date_string = f"2026-04-0{i+1}"
     #     else:
     #         date_string = f"2026-04-{i+1}"
     #     ingest_statcast(date_string) 
-    # for i in range(0, 12):
+
+    # for i in range(0, 30):
     #     if i < 9:
     #         date_string = f"2026-05-0{i+1}"
     #     else:
     #         date_string = f"2026-05-{i+1}"
     #     ingest_statcast(date_string) 
-    ingest_statcast("2026-05-17")
-    ingest_statcast("2026-05-18")
-    ingest_statcast("2026-05-19")
+    #     print(date_string)
+
+    # for i in range(0, 20):
+    #     if i < 9:
+    #         date_string = f"2026-06-0{i+1}"
+    #     else:
+    #         date_string = f"2026-06-{i+1}"
+    #     ingest_statcast(date_string) 
+    #     print(date_string)
+    ingest_statcast("2026-06-21")
+    ingest_statcast("2026-06-22")
     
-    conn.close()
+    
 
 if __name__ == "__main__":
      main()
