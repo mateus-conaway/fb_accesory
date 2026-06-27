@@ -9,7 +9,7 @@ def search_players(name: str):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT player_id, name_first, name_last, position, team_abbrev
+        SELECT player_id, name_first, name_last, position
         FROM players
         WHERE name_full LIKE ?
         ORDER BY name_last
