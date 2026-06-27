@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS players (
     name_full TEXT NOT NULL,
     position TEXT NOT NULL,
     mlb_played_first REAL,
-    mlb_played_last REAL
+    mlb_played_last REAL,
+    team_abbrev TEXT
 );
 
 CREATE TABLE IF NOT EXISTS games (

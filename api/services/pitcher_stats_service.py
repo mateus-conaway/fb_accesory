@@ -138,6 +138,17 @@ def calculate_innings_pitched(pitcher):
         outs += calculate_outs(pitcher, row["game_date"])
     return f"{int(outs/3)}.{(outs % 3)}"
 
+
+def parse_innings_pitched(ip_str: str) -> float:
+    """Convert baseball IP notation (e.g. '12.1' = 12 1/3 innings) to decimal."""
+    if not ip_str or ip_str == "0.0":
+        return 0.0
+    parts = str(ip_str).split(".")
+    whole = int(parts[0])
+    partial_outs = int(parts[1]) if len(parts) > 1 and parts[1] else 0
+    return whole + partial_outs / 3
+
+
 def get_earned_runs(pitcher: int, game_pk: int) -> int:
     conn = get_db()
     inning_half = conn.execute(
@@ -154,10 +165,34 @@ def get_earned_runs(pitcher: int, game_pk: int) -> int:
 
     return er
 
-def calculate_era(pitcher: int, game_pk: int) -> float:
+def calculate_era(pitcher: int, game_pk: int) -> float | None:
     er = get_earned_runs(pitcher, game_pk)
-    innings = calculate_innings_pitched(pitcher)
-    return (er * 9)/ innings
+    if er is None:
+        return None
+    ip_str = calculate_innings_pitched(pitcher)
+    innings = parse_innings_pitched(ip_str)
+    if innings <= 0:
+        return None
+    return (er * 9) / innings
+
+
+def get_starting_lineup(game_pk: int, side: str):
+    game = statsapi.get("game", {"gamePk": game_pk})
+    team = game["liveData"]["boxscore"]["teams"][side]
+    players = team["players"]
+
+    starters = []
+    for p in players.values():
+        batter_order = p.get("battingOrder")
+        if batter_order and batter_order.endswith("00"):  # starter in that batting slot
+            starters.append({
+                "player_id": p["person"]["id"],
+                "name": p["person"]["fullName"],
+                "batting_order": batter_order,
+            })
+
+    starters.sort(key=lambda x: int(x["batting_order"]))
+    return starters
 
 def main():
     

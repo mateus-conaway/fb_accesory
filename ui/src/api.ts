@@ -5,6 +5,39 @@ export interface Player {
   name_last: string;
   name_first: string;
   position: string;
+  team_abbrev?: string | null;
+}
+
+export type ScheduleGame = {
+  game_pk: number;
+  home_name: string;
+  away_name: string;
+  home_abbrev: string | null;
+  away_abbrev: string | null;
+  home_probable_pitcher: string | null;
+  away_probable_pitcher: string | null;
+};
+
+export type ScheduleResponse = {
+  date: string | null;
+  games: ScheduleGame[];
+};
+
+export type LineupStarter = {
+  player_id: number;
+  name: string;
+  batting_order: string;
+};
+
+const ABBREV_ALIASES: Record<string, string[]> = {
+  OAK: ["OAK", "ATH"],
+  ATH: ["OAK", "ATH"],
+};
+
+function abbrevsMatch(playerAbbrev: string, gameAbbrev: string | null): boolean {
+  if (!gameAbbrev) return false;
+  const aliases = ABBREV_ALIASES[playerAbbrev] ?? [playerAbbrev];
+  return aliases.includes(gameAbbrev);
 }
 
 export async function searchPlayers(name: string) {
@@ -16,6 +49,32 @@ export async function searchPlayers(name: string) {
 export async function getPlayer(playerId: string): Promise<Player> {
   const response = await fetch(`${BASE_URL}/players/${playerId}`);
   if (!response.ok) throw new Error("Player not found");
+  return response.json();
+}
+
+export async function getSchedule(): Promise<ScheduleResponse> {
+  const response = await fetch(`${BASE_URL}/schedule`);
+  if (!response.ok) throw new Error("Schedule unavailable");
+  return response.json();
+}
+
+export async function getLineup(
+  gamePk: number,
+  side: "home" | "away",
+): Promise<{ starters: LineupStarter[] }> {
+  const params = new URLSearchParams({
+    game_pk: String(gamePk),
+    side,
+  });
+  const response = await fetch(`${BASE_URL}/stats/lineup?${params}`);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const detail =
+      typeof body.detail === "string"
+        ? body.detail
+        : "Lineup not available yet";
+    throw new Error(detail);
+  }
   return response.json();
 }
 
@@ -31,6 +90,7 @@ export type HitterStatLines = {
 };
 
 export type PitcherStatLines = {
+  era: number | null;
   career_vs_hitter_one: number[];
   career_vs_hitter_two: number[];
   career_vs_hitter_three: number[];
@@ -64,9 +124,6 @@ export async function getHitterStats(
 
 export async function getPitcherStats(
   pitcherId: string,
-  hand: string,
-  pitchType: string,
-  ballpark: string,
   hitterOne: string,
   hitterTwo: string,
   hitterThree: string,
@@ -76,11 +133,9 @@ export async function getPitcherStats(
   hitterSeven: string,
   hitterEight: string,
   hitterNine: string,
+  gamePk: string,
 ): Promise<PitcherStatLines> {
   const params = new URLSearchParams({
-    ballpark,
-    hand,
-    pitch_type: pitchType,
     hitter_one: hitterOne,
     hitter_two: hitterTwo,
     hitter_three: hitterThree,
@@ -90,10 +145,32 @@ export async function getPitcherStats(
     hitter_seven: hitterSeven,
     hitter_eight: hitterEight,
     hitter_nine: hitterNine,
+    game_pk: gamePk,
   });
   const response = await fetch(
     `${BASE_URL}/stats/pitcher/${pitcherId}?${params}`,
   );
-  if (!response) throw new Error("Stats unavailable");
+  if (!response.ok) throw new Error("Stats unavailable");
   return response.json();
+}
+
+export function findGameForTeam(
+  games: ScheduleGame[],
+  teamAbbrev: string,
+): ScheduleGame | undefined {
+  return games.find(
+    (g) =>
+      abbrevsMatch(teamAbbrev, g.home_abbrev) ||
+      abbrevsMatch(teamAbbrev, g.away_abbrev),
+  );
+}
+
+export function lineupSideForPitcher(
+  teamAbbrev: string,
+  game: ScheduleGame,
+): "home" | "away" {
+  if (abbrevsMatch(teamAbbrev, game.home_abbrev)) {
+    return "away";
+  }
+  return "home";
 }
