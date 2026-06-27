@@ -18,12 +18,8 @@ CREATE TABLE IF NOT EXISTS players (
     name_full TEXT NOT NULL,
     position TEXT NOT NULL,
     mlb_played_first REAL,
-<<<<<<< HEAD
-    mlb_played_last REAL
-=======
     mlb_played_last REAL,
     team_abbrev TEXT
->>>>>>> pitcher_stats
 );
 
 CREATE TABLE IF NOT EXISTS games (
@@ -49,10 +45,7 @@ CREATE TABLE IF NOT EXISTS pitches (
     pitch_name TEXT,
     events TEXT,
     description TEXT,
-<<<<<<< HEAD
-=======
     story_description TEXT,
->>>>>>> pitcher_stats
     result_type TEXT,
     release_speed REAL,
     launch_speed REAL,

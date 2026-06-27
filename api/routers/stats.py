@@ -1,14 +1,8 @@
-<<<<<<< HEAD
-from fastapi import APIRouter, Query
-
-from api.services.stats_service import (
-=======
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 
 from api.services.batter_stats_service import (
->>>>>>> pitcher_stats
     calculate_stats,
     season_stats,
     career_at_ballpark,
@@ -20,16 +14,6 @@ from api.services.batter_stats_service import (
     season_vs_pitcher,
 )
 
-<<<<<<< HEAD
-router = APIRouter()
-
-@router.get("/pitcher/{pitcher_id}")
-def get_pitcher_stats(
-    pitcher_id: int,
-    ballpark: str,
-    hand: str,
-    pitch_type: str,
-=======
 from api.services.pitcher_stats_service import (
     calculate_era,
     get_starting_lineup,
@@ -55,7 +39,6 @@ def get_lineup(
 @router.get("/pitcher/{pitcher_id}")
 def get_pitcher_stats(
     pitcher_id: int,
->>>>>>> pitcher_stats
     hitter_one: int,
     hitter_two: int,
     hitter_three: int,
@@ -64,17 +47,11 @@ def get_pitcher_stats(
     hitter_six: int,
     hitter_seven: int,
     hitter_eight: int,
-<<<<<<< HEAD
-    hitter_nine: int
-):
-    return {
-=======
     hitter_nine: int,
     game_pk: int,
 ):
     return {
         "era": calculate_era(pitcher_id, game_pk),
->>>>>>> pitcher_stats
         "career_vs_hitter_one": calculate_stats(
             career_vs_pitcher(hitter_one, pitcher_id)
         ),
@@ -104,21 +81,14 @@ def get_pitcher_stats(
         ),
     }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> pitcher_stats
 @router.get("/hitter/{batter_id}")
 def get_batter_stats(
     batter_id: int,
     pitcher_id: int,
     hand: str,
     pitch_type: str,
-<<<<<<< HEAD
-    ballpark: str
-=======
     ballpark: str,
->>>>>>> pitcher_stats
 ):
     """Return eight stat lines (each from calculate_stats) for one batter."""
     return {
@@ -143,8 +113,3 @@ def get_batter_stats(
             season_at_ballpark(batter_id, ballpark)
         ),
     }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> pitcher_stats

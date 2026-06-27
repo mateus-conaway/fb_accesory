@@ -2,13 +2,6 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
-<<<<<<< HEAD
-    extend: {},
-  },
-  plugins: [],
-}
-
-=======
     extend: {
       colors: {
         canvas: "#1e1e1e",
@@ -38,4 +31,3 @@ export default {
   },
   plugins: [],
 };
->>>>>>> pitcher_stats

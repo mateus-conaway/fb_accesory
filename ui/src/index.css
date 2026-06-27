@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-<<<<<<< HEAD
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-=======
 @layer utilities {
   .bg-canvas {
     background-color: #1e1e1e;
@@ -52,5 +46,4 @@ html, body, #root {
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.2);
   }
->>>>>>> pitcher_stats
 }
