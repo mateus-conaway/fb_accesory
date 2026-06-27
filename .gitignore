@@ -2,3 +2,7 @@ fantasy_baseball.db
 fantasy_baseball.db-journal
 fantasy_baseball.db.backup
 *.sqbpro
+
+__pycache__/
+*.py[cod]
+*$py.class
