@@ -23,8 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# pycache files
-__pycache__/
+# Python bytecode / cache (any directory)
+**/__pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+
+# Local database & editor project files
+fantasy_baseball.db
+fantasy_baseball.db-journal
+fantasy_baseball.db.backup
+*.sqbpro
 
