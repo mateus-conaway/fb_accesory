@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   getHitterStats,
   getPitcherStats,
@@ -7,11 +7,13 @@ import {
   findGameForTeam,
   lineupSideForPitcher,
 } from "../api.ts";
+import type { ChangeEvent } from "react";
 import type {
-  HitterStatLines,
-  PitcherStatLines,
+  GoPayload,
   Player,
   ScheduleGame,
+  SearchSelection,
+  StatLines,
 } from "../api.ts";
 
 /** Placeholder context until starting pitcher / park come from schedule data */
@@ -20,14 +22,19 @@ const TEST_HAND = "R";
 const TEST_PITCH_TYPE = "CH";
 const TEST_BALLPARK = "NYY";
 
-function SearchBar({ onSelectPlayer }) {
+type SearchBarProps = {
+  onSelectPlayer?: (selection: SearchSelection) => void;
+};
+
+function SearchBar({ onSelectPlayer }: SearchBarProps) {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const wrapperRef = useRef(null);
+  const [suggestions, setSuggestions] = useState<Player[]>([]);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node | null;
+      if (wrapperRef.current && !wrapperRef.current.contains(target)) {
         setSuggestions([]);
       }
     }
@@ -35,7 +42,7 @@ function SearchBar({ onSelectPlayer }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  async function handleInput(e) {
+  async function handleInput(e: ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
     setQuery(val);
     if (!val.trim()) {
@@ -94,8 +101,8 @@ function SearchBar({ onSelectPlayer }) {
 }
 
 type NavbarProps = {
-  onGoClick: (payload: unknown) => void;
-  onSearchSelect?: (data: unknown) => void;
+  onGoClick: (payload: GoPayload) => void;
+  onSearchSelect?: (selection: SearchSelection) => void;
   scheduleGames: ScheduleGame[];
   scheduleError: string | null;
 };
@@ -118,7 +125,7 @@ export default function Navbar({
     setGoLoading(true);
     setGoError(null);
     try {
-      let stats: HitterStatLines | PitcherStatLines;
+      let stats: StatLines;
       if (selectedSearchPlayer.position === "Hitter") {
         stats = await getHitterStats(
           String(playerIdForGo),
@@ -184,10 +191,10 @@ export default function Navbar({
       </div>
 
       <SearchBar
-        onSelectPlayer={(data) => {
-          setSelectedSearchPlayer(data.player);
+        onSelectPlayer={(selection) => {
+          setSelectedSearchPlayer(selection.player);
           setGoError(null);
-          if (onSearchSelect) onSearchSelect(data);
+          if (onSearchSelect) onSearchSelect(selection);
         }}
       />
 

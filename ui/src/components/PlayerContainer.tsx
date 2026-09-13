@@ -1,8 +1,6 @@
-import React from "react";
-
 import type { HitterStatLines } from "../api.ts";
 
-import type { PitcherStatLines } from "../api.ts";
+import type { PitcherStatLines, PlayerSlot } from "../api.ts";
 
 const HITTER_STATLINE_KEYS: (keyof HitterStatLines)[] = [
   "season_stats",
@@ -84,17 +82,31 @@ function formatStatline(arr: number[]): string[] {
   ];
 }
 
-export default function PlayerContainer({ playerData, onBookmark, isFocused }) {
+type PlayerContainerProps = {
+  playerData: PlayerSlot | null;
+
+  onBookmark?: (player: PlayerSlot | null) => void;
+
+  isFocused: boolean;
+};
+
+export default function PlayerContainer({
+  playerData,
+  onBookmark,
+  isFocused,
+}: PlayerContainerProps) {
   const displayName = playerData ? playerData.name : "Player Name";
 
   const position = playerData?.position;
 
-  const stats =
-    position === "Hitter"
-      ? (playerData?.stats as HitterStatLines | undefined)
-      : (playerData?.stats as PitcherStatLines | undefined);
+  const stats = playerData?.stats;
 
-  const keys =
+  /** Hitter and pitcher lines share no keys, so read them by name */
+  const statValues = stats as
+    | Record<string, number[] | number | null>
+    | undefined;
+
+  const keys: readonly string[] =
     position === "Hitter" ? HITTER_STATLINE_KEYS : PITCHER_STATLINE_KEYS;
 
   return (
@@ -139,7 +151,7 @@ export default function PlayerContainer({ playerData, onBookmark, isFocused }) {
           ) : (
             keys.map((key) => {
               if (key === "era") {
-                const era = (stats as PitcherStatLines).era;
+                const era = statValues?.era;
 
                 return (
                   <div
@@ -151,15 +163,15 @@ export default function PlayerContainer({ playerData, onBookmark, isFocused }) {
                     </div>
 
                     <div className="text-xs text-white/70 leading-snug">
-                      {era != null ? era.toFixed(2) : "—"}
+                      {typeof era === "number" ? era.toFixed(2) : "—"}
                     </div>
                   </div>
                 );
               }
 
-              const arr = stats[key] as number[] | undefined;
+              const arr = statValues?.[key];
 
-              if (!arr || !Array.isArray(arr)) return null;
+              if (!Array.isArray(arr)) return null;
 
               const lines = formatStatline(arr);
 

@@ -282,14 +282,22 @@ def main():
     # ingest_statcast("2026-03-28")
     # ingest_statcast("2026-03-29")
     # ingest_statcast("2026-03-30")
-    # ingest_statcast("2026-03-31")
+    ingest_statcast("2026-07-17")
+    ingest_statcast("2026-07-18")
 
-    # for i in range(0, 29):
+    # for i in range(0, 30):
     #     if i < 9:
-    #         date_string = f"2026-04-0{i+1}"
+    #         date_string = f"2026-06-0{i+1}"
     #     else:
-    #         date_string = f"2026-04-{i+1}"
-    #     ingest_statcast(date_string) 
+    #         date_string = f"2026-06-{i+1}"
+    #     ingest_statcast(date_string)
+    
+    # for i in range(0, 31):
+    #     if i < 9:
+    #         date_string = f"2026-07-0{i+1}"
+    #     else:
+    #         date_string = f"2026-07-{i+1}"
+    #     ingest_statcast(date_string)     
 
     # for i in range(0, 30):
     #     if i < 9:
@@ -306,8 +314,7 @@ def main():
     #         date_string = f"2026-06-{i+1}"
     #     ingest_statcast(date_string) 
     #     print(date_string)
-    ingest_statcast("2026-06-21")
-    ingest_statcast("2026-06-22")
+  
     
     
 

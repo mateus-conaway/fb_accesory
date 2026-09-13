@@ -1,12 +1,19 @@
-import React from "react";
 import BookmarkedPlayer from "./BookmarkedPlayer.tsx";
+import type { HpFilter, PlayerSlot } from "../api.ts";
+
+type SidebarProps = {
+  bookmarkedPlayers: PlayerSlot[];
+  hpFilter: HpFilter;
+  onHpFilterChange: (filter: HpFilter) => void;
+  onDeleteBookmark: (player: PlayerSlot) => void;
+};
 
 export default function Sidebar({
   bookmarkedPlayers,
   hpFilter,
   onHpFilterChange,
   onDeleteBookmark,
-}) {
+}: SidebarProps) {
   return (
     <aside className="w-56 shrink-0 bg-surface rounded-2xl border border-white/10 flex flex-col overflow-hidden shadow-card">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">

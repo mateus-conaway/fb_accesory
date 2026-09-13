@@ -40,7 +40,7 @@ function abbrevsMatch(playerAbbrev: string, gameAbbrev: string | null): boolean 
   return aliases.includes(gameAbbrev);
 }
 
-export async function searchPlayers(name: string) {
+export async function searchPlayers(name: string): Promise<Player[]> {
   const response = await fetch(`${BASE_URL}/players/search?name=${name}`);
   if (!response.ok) throw new Error("Search failed");
   return response.json();
@@ -101,6 +101,29 @@ export type PitcherStatLines = {
   career_vs_hitter_eight: number[];
   career_vs_hitter_nine: number[];
 };
+
+export type StatLines = HitterStatLines | PitcherStatLines;
+
+/** A player as displayed in one of the two comparison slots */
+export type PlayerSlot = {
+  name: string;
+  stats?: StatLines;
+  position?: string;
+  team?: string;
+};
+
+/** Either a fully loaded player from GO, or a bare player name */
+export type GoPayload =
+  | string
+  | { name: string; stats?: StatLines; position?: string };
+
+export type SearchSelection = {
+  player: Player;
+};
+
+export type Slot = 1 | 2;
+
+export type HpFilter = "H" | "P";
 
 export async function getHitterStats(
   batterId: string,

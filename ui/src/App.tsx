@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 import Navbar from "./components/Navbar.tsx";
 
@@ -8,7 +8,14 @@ import MainContent from "./components/MainContent.tsx";
 
 import { getSchedule } from "./api.ts";
 
-import type { ScheduleGame } from "./api.ts";
+import type {
+  GoPayload,
+  HpFilter,
+  PlayerSlot,
+  ScheduleGame,
+  SearchSelection,
+  Slot,
+} from "./api.ts";
 
 
 
@@ -16,15 +23,15 @@ const STORAGE_KEY = "fb_bookmarked_players";
 
 
 
-function loadBookmarks() {
+function loadBookmarks(): PlayerSlot[] {
 
   try {
 
     const raw = localStorage.getItem(STORAGE_KEY);
 
-    const parsed = raw ? JSON.parse(raw) : [];
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
 
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? (parsed as PlayerSlot[]) : [];
 
   } catch {
 
@@ -36,7 +43,7 @@ function loadBookmarks() {
 
 
 
-function saveBookmarks(bookmarks) {
+function saveBookmarks(bookmarks: PlayerSlot[]) {
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
 
@@ -46,17 +53,18 @@ function saveBookmarks(bookmarks) {
 
 export default function App() {
 
-  const [bookmarkedPlayers, setBookmarkedPlayers] = useState(loadBookmarks);
+  const [bookmarkedPlayers, setBookmarkedPlayers] =
+    useState<PlayerSlot[]>(loadBookmarks);
 
-  const [focusedSlot, setFocusedSlot] = useState(1);
+  const [focusedSlot, setFocusedSlot] = useState<Slot>(1);
 
-  const [playerSlot1, setPlayerSlot1] = useState(null);
+  const [playerSlot1, setPlayerSlot1] = useState<PlayerSlot | null>(null);
 
-  const [playerSlot2, setPlayerSlot2] = useState(null);
+  const [playerSlot2, setPlayerSlot2] = useState<PlayerSlot | null>(null);
 
-  const [hpFilter, setHpFilter] = useState("H");
+  const [hpFilter, setHpFilter] = useState<HpFilter>("H");
 
-  const [selectedTeam, setSelectedTeam] = useState("");
+  const [selectedTeam] = useState("");
 
   const [scheduleGames, setScheduleGames] = useState<ScheduleGame[]>([]);
 
@@ -96,7 +104,7 @@ export default function App() {
 
 
 
-  function handleBookmark(playerData) {
+  function handleBookmark(playerData: PlayerSlot | null) {
 
     if (!playerData) return;
 
@@ -114,7 +122,7 @@ export default function App() {
 
 
 
-  function handleDeleteBookmark(player) {
+  function handleDeleteBookmark(player: PlayerSlot) {
 
     setBookmarkedPlayers((prev) => prev.filter((p) => p.name !== player.name));
 
@@ -122,7 +130,7 @@ export default function App() {
 
 
 
-  function handleGoClick(payload) {
+  function handleGoClick(payload: GoPayload | null) {
 
     if (!payload) return;
 
@@ -172,7 +180,17 @@ export default function App() {
 
 
 
-  function handleSearchSelect(playerData) {
+  function handleSearchSelect({ player }: SearchSelection) {
+
+    const playerData: PlayerSlot = {
+
+      name: `${player.name_first} ${player.name_last}`,
+
+      position: player.position,
+
+      team: player.team_abbrev ?? undefined,
+
+    };
 
     if (focusedSlot === 1) {
 

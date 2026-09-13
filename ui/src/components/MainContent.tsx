@@ -1,5 +1,15 @@
-import React from "react";
 import PlayerContainer from "./PlayerContainer.tsx";
+import type { PlayerSlot, Slot } from "../api.ts";
+
+const SLOTS: Slot[] = [1, 2];
+
+type MainContentProps = {
+  focusedSlot: Slot;
+  onFocusChange: (slot: Slot) => void;
+  playerSlot1: PlayerSlot | null;
+  playerSlot2: PlayerSlot | null;
+  onBookmark?: (player: PlayerSlot | null) => void;
+};
 
 export default function MainContent({
   focusedSlot,
@@ -7,14 +17,14 @@ export default function MainContent({
   playerSlot1,
   playerSlot2,
   onBookmark,
-}) {
+}: MainContentProps) {
   return (
     <div className="flex-1 flex flex-col min-w-0 gap-3 overflow-hidden">
       <div className="flex items-center gap-2 px-1">
         <span className="text-[10px] font-semibold tracking-widest text-white/35 uppercase mr-1">
           Active Slot
         </span>
-        {[1, 2].map((slot) => (
+        {SLOTS.map((slot) => (
           <button
             key={slot}
             onClick={() => onFocusChange(slot)}

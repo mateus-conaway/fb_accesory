@@ -1,6 +1,14 @@
-import React from "react";
+import type { PlayerSlot } from "../api.ts";
 
-export default function BookmarkedPlayer({ player, onDelete }) {
+type BookmarkedPlayerProps = {
+  player: PlayerSlot;
+  onDelete: (player: PlayerSlot) => void;
+};
+
+export default function BookmarkedPlayer({
+  player,
+  onDelete,
+}: BookmarkedPlayerProps) {
   return (
     <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-surface-raised border border-white/10 text-sm hover:border-white/15 transition-colors">
       <div className="flex flex-col leading-tight overflow-hidden">
