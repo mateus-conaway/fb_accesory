@@ -45,8 +45,10 @@ PA_EVENTS = {
     "field_out",
 }
 
+def get_rbi()
 
-def calculate_stats(plate_apps: list) -> list:
+
+def calculate_stats(player_id: int,plate_apps: list) -> list:
     pa = 0
     ab = 0
     bb = 0
@@ -69,7 +71,7 @@ def calculate_stats(plate_apps: list) -> list:
         home_run += 1 if plate_app["events"] in HOME_RUN_EVENT else 0
         if plate_app["events"] == "field_error" and plate_app["outs_when_up"] == 2:
             continue
-        rbi += plate_app["post_bat_score"] - plate_app["bat_score"]
+        rbi += plate_app["post_bat_score"] - plate_app["bat_score"] if plate_app["events"] != "grounded_into_double_play" or plate_app["events"] != "fielders_choice" else 0
 
     hits = single + double + triples + home_run
     avg = hits / ab if ab else 0.0
@@ -79,8 +81,10 @@ def calculate_stats(plate_apps: list) -> list:
     ) / ab if ab else 0.0
     ops = obp + slg
 
-    return [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, rbi, avg, obp, slg, ops]
+    return [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, get_rbi(player_id), avg, obp, slg, ops]
 
+def get_rbi(player_id: int):
+    pass
 
 def get_year() -> int | None:
     conn = get_db()
