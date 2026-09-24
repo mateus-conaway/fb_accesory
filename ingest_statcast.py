@@ -1,7 +1,8 @@
+import argparse
 import sqlite3
 import time
 import pandas as pd
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pybaseball import statcast, playerid_lookup, playerid_reverse_lookup, statcast_batter, statcast_pitcher
 from pathlib import Path
 
@@ -87,12 +88,12 @@ def series_to_sql(player_info: pd.DataFrame) -> list:
 
     return [player_id, last_name, first_name, mlb_played_first, mlb_played_last]
 
-def player_sql(conn: sqlite3.Connection, player_info: list) -> None:
-    try:
-        conn.execute("INSERT OR REPLACE INTO players (player_id, name_last, name_first, mlb_played_first, mlb_played_last) VALUES (?,?,?,?,?)", (batter_vals[0], batter_vals[1], batter_vals[2], batter_vals[3], batter_vals[4]))
-        print("success!")
-    except Exception as e:
-        print(f"Error: {e}")
+# def player_sql(conn: sqlite3.Connection, player_info: list) -> None:
+#     try:
+#         conn.execute("INSERT OR REPLACE INTO players (player_id, name_last, name_first, mlb_played_first, mlb_played_last) VALUES (?,?,?,?,?)", (batter_vals[0], batter_vals[1], batter_vals[2], batter_vals[3], batter_vals[4]))
+#         print("success!")
+#     except Exception as e:
+#         print(f"Error: {e}")
 
 def execute_player_sql(conn: sqlite3.Connection, player_info: list, position: str) -> None:
     try:
@@ -217,6 +218,7 @@ def ingest_statcast(date_string: str) -> None:
     conn.close()
     print("Data ingested.")
     print("------------------------------------------------------------")
+    time.sleep(5)
 
 def assign_teams(conn: sqlite3.Connection, games_list: pd.DataFrame) -> None:
     topbot = ['Top', 'Bot']
@@ -268,55 +270,45 @@ def assign_teams(conn: sqlite3.Connection, games_list: pd.DataFrame) -> None:
 
 
 
-def main():
-    # conn = get_db_connection(DB_PATH)
-    # with open(Path(__file__).parent / "schema.sql") as f:
-    #     conn.executescript(f.read())
-    # conn.close()
-    
+def parse_iso_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"invalid date '{value}'; expected YYYY-MM-DD"
+        ) from exc
 
 
-    # ingest_statcast("2026-03-25")
-    # ingest_statcast("2026-03-26")
-    # ingest_statcast("2026-03-27")
-    # ingest_statcast("2026-03-28")
-    # ingest_statcast("2026-03-29")
-    # ingest_statcast("2026-03-30")
-    ingest_statcast("2026-07-17")
-    ingest_statcast("2026-07-18")
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Ingest Statcast pitch data into fantasy_baseball.db "
+            "for every date in an inclusive YYYY-MM-DD range."
+        )
+    )
+    parser.add_argument(
+        "start_date",
+        type=parse_iso_date,
+        help="First date to ingest (YYYY-MM-DD)",
+    )
+    parser.add_argument(
+        "end_date",
+        type=parse_iso_date,
+        help="Last date to ingest (YYYY-MM-DD), inclusive",
+    )
+    args = parser.parse_args()
 
-    # for i in range(0, 30):
-    #     if i < 9:
-    #         date_string = f"2026-06-0{i+1}"
-    #     else:
-    #         date_string = f"2026-06-{i+1}"
-    #     ingest_statcast(date_string)
-    
-    # for i in range(0, 31):
-    #     if i < 9:
-    #         date_string = f"2026-07-0{i+1}"
-    #     else:
-    #         date_string = f"2026-07-{i+1}"
-    #     ingest_statcast(date_string)     
+    if args.end_date < args.start_date:
+        parser.error(
+            f"end_date {args.end_date.isoformat()} precedes "
+            f"start_date {args.start_date.isoformat()}"
+        )
 
-    # for i in range(0, 30):
-    #     if i < 9:
-    #         date_string = f"2026-05-0{i+1}"
-    #     else:
-    #         date_string = f"2026-05-{i+1}"
-    #     ingest_statcast(date_string) 
-    #     print(date_string)
+    current = args.start_date
+    while current <= args.end_date:
+        ingest_statcast(current.isoformat())
+        current += timedelta(days=1)
 
-    # for i in range(0, 20):
-    #     if i < 9:
-    #         date_string = f"2026-06-0{i+1}"
-    #     else:
-    #         date_string = f"2026-06-{i+1}"
-    #     ingest_statcast(date_string) 
-    #     print(date_string)
-  
-    
-    
 
 if __name__ == "__main__":
-     main()
+    main()

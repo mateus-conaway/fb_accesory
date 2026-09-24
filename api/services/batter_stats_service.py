@@ -45,7 +45,7 @@ PA_EVENTS = {
     "field_out",
 }
 
-def calculate_stats(plate_apps: list) -> list:
+def calculate_stats(player_id: int, plate_apps: list) -> list:
     pa = 0
     ab = 0
     bb = 0
@@ -78,8 +78,10 @@ def calculate_stats(plate_apps: list) -> list:
     ) / ab if ab else 0.0
     ops = obp + slg
 
-    return [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, rbi, avg, obp, slg, ops]
+    return [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, get_rbi(player_id), avg, obp, slg, ops]
 
+def get_rbi(player_id: int):
+    pass
 
 def get_year() -> int | None:
     conn = get_db()
