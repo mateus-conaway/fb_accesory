@@ -1,4 +1,5 @@
 from api.database import get_db
+import statsapi
 
 SINGLE_EVENT = {"single"}
 DOUBLE_EVENT = {"double"}
@@ -66,9 +67,12 @@ def calculate_stats(plate_apps: list) -> list:
         double += 1 if plate_app["events"] in DOUBLE_EVENT else 0
         triples += 1 if plate_app["events"] in TRIPLE_EVENT else 0
         home_run += 1 if plate_app["events"] in HOME_RUN_EVENT else 0
-        if plate_app["events"] == "field_error" and plate_app["outs_when_up"] == 2:
-            continue
-        rbi += plate_app["post_bat_score"] - plate_app["bat_score"]
+        # if plate_app["events"] == "field_error" and plate_app["outs_when_up"] == 2:
+        #     continue
+        # rbi += plate_app["post_bat_score"] - plate_app["bat_score"]
+        if plate_app["post_bat_score"] > plate_app["bat_score"]:
+            num_rbi = statsapi.get("game", {"gamePk": plate_app["game_pk"]})["liveData"]["plays"]["allPlays"][plate_app["at_bat_number"]- 1]["result"]["rbi"]
+            rbi += num_rbi
 
     hits = single + double + triples + home_run
     avg = hits / ab if ab else 0.0
