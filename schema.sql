@@ -4,9 +4,12 @@
 -- =============================================================================
 -- CORE TABLES
 -- =============================================================================
+
 DROP TABLE IF EXISTS players;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS pitches;
+DROP TABLE IF EXISTS rbi_events;
+DROP TABLE IF EXISTS run_events;
 DROP TABLE IF EXISTS ballparks;
 DROP TABLE IF EXISTS pitch_type_class;
 -- ALTER TABLE pitches DROP COLUMN pitch_name;
@@ -42,11 +45,17 @@ CREATE TABLE IF NOT EXISTS pitches (
     stand TEXT NOT NULL,
     p_throws TEXT NOT NULL,
     pitch_type TEXT,
-    pitch_name TEXT,
     events TEXT,
     description TEXT,
-    story_description TEXT,
     result_type TEXT,
+    zone INTEGER,
+    release_spin REAL,
+    pfx_x REAL,
+    pfx_z REAL,
+    hit_distance REAL,
+    launch_angle REAL,
+    balls INTEGER,
+    strikes INTEGER,
     release_speed REAL,
     launch_speed REAL,
     at_bat_number INTEGER NOT NULL,
@@ -61,6 +70,24 @@ CREATE TABLE IF NOT EXISTS pitches (
     FOREIGN KEY (game_pk) REFERENCES games(game_pk),
     FOREIGN KEY (batter) REFERENCES players(player_id),
     FOREIGN KEY (pitcher) REFERENCES players(player_id)
+);
+
+-- One row per plate appearance.
+CREATE TABLE IF NOT EXISTS rbi_events (
+    game_pk INTEGER NOT NULL,
+    at_bat_number INTEGER NOT NULL,
+    rbi INTEGER NOT NULL,
+    PRIMARY KEY (game_pk, at_bat_number)
+);
+
+-- One row per run that scored. A single plate appearance can have several.
+CREATE TABLE IF NOT EXISTS run_events (
+    game_pk INTEGER NOT NULL,
+    at_bat_number INTEGER NOT NULL,
+    responsible_pitcher_id INTEGER NOT NULL,
+    earned INTEGER NOT NULL CHECK (earned IN (0, 1)), -- SQLite has no boolean type: 1 = earned, 0 = unearned
+    runner_id INTEGER NOT NULL,
+    PRIMARY KEY (game_pk, at_bat_number, runner_id)
 );
 
 CREATE TABLE IF NOT EXISTS ballparks (
@@ -353,6 +380,10 @@ CREATE INDEX IF NOT EXISTS idx_pitches_pitcher_date ON pitches(pitcher, game_dat
 -- Pitches: game and pitch-type
 CREATE INDEX IF NOT EXISTS idx_pitches_game ON pitches(game_pk);
 CREATE INDEX IF NOT EXISTS idx_pitches_pitcher_pitch ON pitches(pitcher, pitch_type, game_year);
+
+-- Run events
+CREATE INDEX IF NOT EXISTS idx_run_events_game_at_bat ON run_events(game_pk, at_bat_number);
+CREATE INDEX IF NOT EXISTS idx_run_events_responsible_pitcher ON run_events(responsible_pitcher_id);
 
 -- Pre-aggregate tables
 CREATE INDEX IF NOT EXISTS idx_batter_game_stats_batter_date ON batter_game_stats(batter, game_date DESC);

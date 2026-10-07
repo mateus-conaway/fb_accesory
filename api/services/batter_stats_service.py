@@ -45,7 +45,7 @@ PA_EVENTS = {
     "field_out",
 }
 
-def calculate_stats(player_id: int, plate_apps: list) -> list:
+def calculate_stats(plate_apps: list) -> list:
     pa = 0
     ab = 0
     bb = 0
@@ -66,9 +66,6 @@ def calculate_stats(player_id: int, plate_apps: list) -> list:
         double += 1 if plate_app["events"] in DOUBLE_EVENT else 0
         triples += 1 if plate_app["events"] in TRIPLE_EVENT else 0
         home_run += 1 if plate_app["events"] in HOME_RUN_EVENT else 0
-        if plate_app["events"] == "field_error" and plate_app["outs_when_up"] == 2:
-            continue
-        rbi += plate_app["post_bat_score"] - plate_app["bat_score"]
 
     hits = single + double + triples + home_run
     avg = hits / ab if ab else 0.0
@@ -78,10 +75,9 @@ def calculate_stats(player_id: int, plate_apps: list) -> list:
     ) / ab if ab else 0.0
     ops = obp + slg
 
-    return [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, get_rbi(player_id), avg, obp, slg, ops]
+    return [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, rbi, avg, obp, slg, ops]
 
-def get_rbi(player_id: int):
-    pass
+
 
 def get_year() -> int | None:
     conn = get_db()
@@ -94,6 +90,17 @@ def get_year() -> int | None:
     ).fetchone()
     conn.close()
     return row["game_year"] if row else None
+
+def get_rbi(batter_id: int):
+    conn = get_db()
+    rows = conn.execute(
+        """
+        SELECT * FROM rbi_events WHERE batter = ?;
+        """,
+        (batter_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 def season_stats(batter_id: int):
     conn = get_db()

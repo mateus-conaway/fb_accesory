@@ -39,50 +39,50 @@ def get_lineup(
 @router.get("/pitcher/{pitcher_id}")
 def get_pitcher_stats(
     pitcher_id: int,
-    hitter_one: int,
-    hitter_two: int,
-    hitter_three: int,
-    hitter_four: int,
-    hitter_five: int,
-    hitter_six: int,
-    hitter_seven: int,
-    hitter_eight: int,
-    hitter_nine: int,
+    Batter_one: int,
+    Batter_two: int,
+    Batter_three: int,
+    Batter_four: int,
+    Batter_five: int,
+    Batter_six: int,
+    Batter_seven: int,
+    Batter_eight: int,
+    Batter_nine: int,
     game_pk: int,
 ):
     return {
         "era": calculate_era(pitcher_id, game_pk),
-        "career_vs_hitter_one": calculate_stats(
-            career_vs_pitcher(hitter_one, pitcher_id)
+        "career_vs_Batter_one": calculate_stats(
+            career_vs_pitcher(Batter_one, pitcher_id)
         ),
-        "career_vs_hitter_two": calculate_stats(
-            career_vs_pitcher(hitter_two, pitcher_id)
+        "career_vs_Batter_two": calculate_stats(
+            career_vs_pitcher(Batter_two, pitcher_id)
         ),
-        "career_vs_hitter_three": calculate_stats(
-            career_vs_pitcher(hitter_three, pitcher_id)
+        "career_vs_Batter_three": calculate_stats(
+            career_vs_pitcher(Batter_three, pitcher_id)
         ),
-        "career_vs_hitter_four": calculate_stats(
-            career_vs_pitcher(hitter_four, pitcher_id)
+        "career_vs_Batter_four": calculate_stats(
+            career_vs_pitcher(Batter_four, pitcher_id)
         ),
-        "career_vs_hitter_five": calculate_stats(
-            career_vs_pitcher(hitter_five, pitcher_id)
+        "career_vs_Batter_five": calculate_stats(
+            career_vs_pitcher(Batter_five, pitcher_id)
         ),
-        "career_vs_hitter_six": calculate_stats(
-            career_vs_pitcher(hitter_six, pitcher_id)
+        "career_vs_Batter_six": calculate_stats(
+            career_vs_pitcher(Batter_six, pitcher_id)
         ),
-        "career_vs_hitter_seven": calculate_stats(
-            career_vs_pitcher(hitter_seven, pitcher_id)
+        "career_vs_Batter_seven": calculate_stats(
+            career_vs_pitcher(Batter_seven, pitcher_id)
         ),
-        "career_vs_hitter_eight": calculate_stats(
-            career_vs_pitcher(hitter_eight, pitcher_id)
+        "career_vs_Batter_eight": calculate_stats(
+            career_vs_pitcher(Batter_eight, pitcher_id)
         ),
-        "career_vs_hitter_nine": calculate_stats(
-            career_vs_pitcher(hitter_nine, pitcher_id)
+        "career_vs_Batter_nine": calculate_stats(
+            career_vs_pitcher(Batter_nine, pitcher_id)
         ),
     }
 
 
-@router.get("/hitter/{batter_id}")
+@router.get("/Batter/{batter_id}")
 def get_batter_stats(
     batter_id: int,
     pitcher_id: int,

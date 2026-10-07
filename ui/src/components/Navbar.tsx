@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import {
-  getHitterStats,
+  getBatterStats,
   getPitcherStats,
   getLineup,
   searchPlayers,
@@ -126,8 +126,8 @@ export default function Navbar({
     setGoError(null);
     try {
       let stats: StatLines;
-      if (selectedSearchPlayer.position === "Hitter") {
-        stats = await getHitterStats(
+      if (selectedSearchPlayer.position === "Batter") {
+        stats = await getBatterStats(
           String(playerIdForGo),
           TEST_PITCHER_ID,
           TEST_HAND,
