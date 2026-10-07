@@ -48,10 +48,10 @@ def get_pitcher_stats(
     Batter_seven: int,
     Batter_eight: int,
     Batter_nine: int,
-    game_pk: int,
+    # game_pk: int,
 ):
     return {
-        "era": calculate_era(pitcher_id, game_pk),
+        # "era": calculate_era(pitcher_id, game_pk),
         "career_vs_Batter_one": calculate_stats(
             career_vs_pitcher(Batter_one, pitcher_id)
         ),
