@@ -17,10 +17,19 @@ import type {
 } from "../api.ts";
 
 /** Placeholder context until starting pitcher / park come from schedule data */
-const TEST_PITCHER_ID = "656492";
+const TEST_PITCHER_ID = "664954";
 const TEST_HAND = "R";
-const TEST_PITCH_TYPE = "CH";
-const TEST_BALLPARK = "NYY";
+const TEST_PITCH_TYPE = "FF";
+const TEST_BALLPARK = "COL";
+const TEST_BATTER_ONE = "500743";
+const TEST_BATTER_TWO = "518692";
+const TEST_BATTER_THREE = "571771";
+const TEST_BATTER_FOUR = "571970";
+const TEST_BATTER_FIVE = "605141";
+const TEST_BATTER_SIX = "606192";
+const TEST_BATTER_SEVEN = "660271";
+const TEST_BATTER_EIGHT = "663656";
+const TEST_BATTER_NINE = "669257";
 
 type SearchBarProps = {
   onSelectPlayer?: (selection: SearchSelection) => void;
@@ -134,6 +143,19 @@ export default function Navbar({
           TEST_PITCH_TYPE,
           TEST_BALLPARK,
         );
+      } else if (selectedSearchPlayer.position === "Pitcher") {
+        stats = await getPitcherStats(
+          String(playerIdForGo),
+          TEST_BATTER_ONE,
+          TEST_BATTER_TWO,
+          TEST_BATTER_THREE,
+          TEST_BATTER_FOUR,
+          TEST_BATTER_FIVE,
+          TEST_BATTER_SIX,
+          TEST_BATTER_SEVEN,
+          TEST_BATTER_EIGHT,
+          TEST_BATTER_NINE,
+        );
       } else {
         const teamAbbrev = selectedSearchPlayer.team_abbrev;
         if (!teamAbbrev) {
@@ -162,7 +184,7 @@ export default function Navbar({
           ids[6],
           ids[7],
           ids[8],
-          String(game.game_pk),
+          // String(game.game_pk),
         );
       }
       const displayName = `${selectedSearchPlayer.name_first} ${selectedSearchPlayer.name_last}`;

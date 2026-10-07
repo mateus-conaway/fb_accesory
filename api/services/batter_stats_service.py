@@ -57,16 +57,18 @@ def calculate_stats(plate_apps: list) -> list:
     home_run = 0
     rbi = 0
     for plate_app in plate_apps:
-        pa += 1 if plate_app["events"] in PA_EVENTS else 0
-        ab += 1 if plate_app["events"] in AB_EVENTS else 0
-        bb += 1 if plate_app["events"] in BB_EVENTS else 0
-        hbp += 1 if plate_app["events"] in HBP_EVENT else 0
-        k += 1 if plate_app["events"] in K_EVENTS else 0
-        single += 1 if plate_app["events"] in SINGLE_EVENT else 0
-        double += 1 if plate_app["events"] in DOUBLE_EVENT else 0
-        triples += 1 if plate_app["events"] in TRIPLE_EVENT else 0
-        home_run += 1 if plate_app["events"] in HOME_RUN_EVENT else 0
-
+        print(plate_app)
+        print("--------------------------------")
+        pa += 1 if plate_app["event"] in PA_EVENTS else 0
+        ab += 1 if plate_app["event"] in AB_EVENTS else 0
+        bb += 1 if plate_app["event"] in BB_EVENTS else 0
+        hbp += 1 if plate_app["event"] in HBP_EVENT else 0
+        k += 1 if plate_app["event"] in K_EVENTS else 0
+        single += 1 if plate_app["event"] in SINGLE_EVENT else 0
+        double += 1 if plate_app["event"] in DOUBLE_EVENT else 0
+        triples += 1 if plate_app["event"] in TRIPLE_EVENT else 0
+        home_run += 1 if plate_app["event"] in HOME_RUN_EVENT else 0
+        rbi += int(plate_app["rbi"])
     hits = single + double + triples + home_run
     avg = hits / ab if ab else 0.0
     obp = (hits + bb + hbp) / pa if pa else 0.0
@@ -91,17 +93,8 @@ def get_year() -> int | None:
     conn.close()
     return row["game_year"] if row else None
 
-def get_rbi(batter_id: int):
-    conn = get_db()
-    rows = conn.execute(
-        """
-        SELECT * FROM rbi_events WHERE batter = ?;
-        """,
-        (batter_id,),
-    ).fetchall()
-    conn.close()
-    return [dict(row) for row in rows]
 
+#646240
 def season_stats(batter_id: int):
     conn = get_db()
     year = get_year()
@@ -109,7 +102,7 @@ def season_stats(batter_id: int):
         return []
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND game_year = ?;
         """,
         (batter_id, year),
@@ -121,7 +114,7 @@ def career_vs_pitcher(batter_id: int, pitcher_id: int):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND pitcher = ?;
         """,
         (batter_id, pitcher_id),
@@ -137,7 +130,7 @@ def season_vs_pitcher(batter_id: int, pitcher_id: int):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND pitcher = ? AND game_year = ?;
         """,
         (batter_id, pitcher_id, year),
@@ -150,7 +143,7 @@ def career_vs_hand(batter_id: int, hand: str):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND p_throws = ?;
         """,
         (batter_id, hand),
@@ -166,7 +159,7 @@ def season_vs_hand(batter_id: int, hand: str):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND p_throws = ? AND game_year = ?;
         """,
         (batter_id, hand, year),
@@ -182,7 +175,7 @@ def season_vs_offspeed(batter_id: int, pitch_type: str):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND pitch_type = ? AND game_year = ?;
         """,
         (batter_id, pitch_type, year),
@@ -195,7 +188,7 @@ def career_at_ballpark(batter_id: int, ballpark: str):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND home_team = ?;
         """,
         (batter_id, ballpark),
@@ -211,7 +204,7 @@ def season_at_ballpark(batter_id: int, ballpark: str):
     conn = get_db()
     rows = conn.execute(
         """
-        SELECT * FROM pitches WHERE events != 0 AND events != 'truncated_pa'
+        SELECT pitches.events as event, COALESCE(rbi_events.rbi, 0) AS rbi FROM pitches LEFT JOIN rbi_events ON pitches.game_pk = rbi_events.game_pk AND pitches.at_bat_number = rbi_events.at_bat_number WHERE events != 0 AND events != 'truncated_pa'
         AND batter = ? AND home_team = ? AND game_year = ?;
         """,
         (batter_id, ballpark, year),

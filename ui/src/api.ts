@@ -159,7 +159,7 @@ export async function getPitcherStats(
   BatterSeven: string,
   BatterEight: string,
   BatterNine: string,
-  gamePk: string,
+  // gamePk: string,
 ): Promise<PitcherStatLines> {
   const params = new URLSearchParams({
     Batter_one: BatterOne,
@@ -171,7 +171,7 @@ export async function getPitcherStats(
     Batter_seven: BatterSeven,
     Batter_eight: BatterEight,
     Batter_nine: BatterNine,
-    game_pk: gamePk,
+    // game_pk: gamePk,
   });
   const response = await fetch(
     `${BASE_URL}/stats/pitcher/${pitcherId}?${params}`,

@@ -166,16 +166,17 @@ def rbi_run_lookup_for_games(game_pks: list[int]) -> list[dict[int, dict[int, in
             for runner in play["runners"]:
                 if runner["details"]["responsiblePitcher"] is None or runner["details"]["isScoringEvent"] is False:
                     continue
-                # print(runner)
-                # print("--------------------------------")
+         
                 earned = 1 if runner["details"]["earned"] else 0
-                # by_runner[runner["details"]["runner"]["id"]] = [at_bat_number, runner["details"]["responsiblePitcher"]["id"], earned]
-                by_runner.append([at_bat_number, runner["details"]["runner"]["id"], earned, runner["details"]["responsiblePitcher"]["id"]])
+ 
+                by_runner.append([at_bat_number, runner["details"]["responsiblePitcher"]["id"], earned, runner["details"]["runner"]["id"]])
         
-
+        # Dictionary key is game_pk, value is dictionary of at_bat_number and rbi
         lookup_rbi[game_pk] = by_at_bat
+
+        # Dictionary key is game_pk, value is list of at_bat_number, runner_id, earned, responsible_pitcher_id
         lookup_runner[game_pk] = by_runner
-        print(lookup_runner)
+
     return [lookup_rbi, lookup_runner]
 
 def ingest_statcast(date_string: str) -> None:
@@ -194,8 +195,7 @@ def ingest_statcast(date_string: str) -> None:
         print(f"No games found for {date_string}")
         return
 
-    rbi_lookup = rbi_run_lookup_for_games(game_pks)[0]
-    runner_lookup = rbi_run_lookup_for_games(game_pks)[1]
+    rbi_lookup, runner_lookup = rbi_run_lookup_for_games(game_pks)
 
     for i in range(len(pitches_df)):
         if launch_speeds[i] != 0:
@@ -234,7 +234,6 @@ def ingest_statcast(date_string: str) -> None:
         fld_score = int(pitches_df["fld_score"].iat[i])
         post_bat_score = int(pitches_df["post_bat_score"].iat[i])
         post_fld_score = int(pitches_df["post_fld_score"].iat[i])
-        # rbi = rbi_lookup.get(game_pk).get(at_bat_number, 0)
 
         # skip if pitch clock violation occurs and does not result in strikeout or walk
         if pitch_type == 0 and events == 0:
@@ -244,21 +243,29 @@ def ingest_statcast(date_string: str) -> None:
         else:
             try:
                 conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, zone, release_spin, pfx_x, pfx_z, hit_distance, launch_angle, balls, strikes, release_speed, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, zone, release_spin, pfx_x, pfx_z, hit_distance, launch_angle, balls, strikes, release_speed, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
-                # conn.execute("INSERT OR REPLACE INTO rbi_events (game_pk, at_bat_number, rbi) VALUES (?,?,?)", (game_pk, at_bat_number, rbi_lookup.get(game_pk).get(at_bat_number, 0)))
-                # conn.execute("INSERT OR REPLACE INTO run_events (game_pk, at_bat_number, responsible_pitcher_id, earned, runner_id) VALUES (?,?,?,?,?)", (game_pk, at_bat_number, pitcher, earned, runner_id))
             except Exception as e:
                 print(f"Error: {e}")
 
     #INGEST RBI AND RUN EVENTS
 
-    for at_bat_number in rbi_lookup.get(game_pk).keys():
-        rbi = rbi_lookup.get(game_pk).get(at_bat_number)
-        conn.execute("INSERT OR REPLACE INTO rbi_events (game_pk, at_bat_number, rbi) VALUES (?,?,?)", (game_pk, at_bat_number, rbi))
-    for runner in runner_lookup.get(game_pk):
-        runner_id = runner[1]
-        earned = runner[2]
-        responsible_pitcher_id = runner[3]
-        conn.execute("INSERT OR REPLACE INTO run_events (game_pk, at_bat_number, responsible_pitcher_id, earned, runner_id) VALUES (?,?,?,?,?)", (game_pk, at_bat_number, responsible_pitcher_id, earned, runner_id))
+    for game_pk, at_bats in rbi_lookup.items():
+        for at_bat_number, rbi in at_bats.items():
+            conn.execute("INSERT OR REPLACE INTO rbi_events (game_pk, at_bat_number, rbi) VALUES (?,?,?)",
+                        (game_pk, at_bat_number, rbi))
+
+    for game_pk, runs in runner_lookup.items():
+        for at_bat_number, responsible_pitcher_id, earned, runner_id in runs:
+            conn.execute("INSERT OR REPLACE INTO run_events (game_pk, at_bat_number, responsible_pitcher_id, earned, runner_id) VALUES (?,?,?,?,?)",
+                        (game_pk, at_bat_number, responsible_pitcher_id, earned, runner_id))
+
+    # for at_bat_number in rbi_lookup.get(game_pk).keys():
+    #     rbi = rbi_lookup.get(game_pk).get(at_bat_number)
+    #     conn.execute("INSERT OR REPLACE INTO rbi_events (game_pk, at_bat_number, rbi) VALUES (?,?,?)", (game_pk, at_bat_number, rbi))
+    # for runner in runner_lookup.get(game_pk):
+    #     runner_id = runner[1]
+    #     earned = runner[2]
+    #     responsible_pitcher_id = runner[3]
+    #     conn.execute("INSERT OR REPLACE INTO run_events (game_pk, at_bat_number, responsible_pitcher_id, earned, runner_id) VALUES (?,?,?,?,?)", (game_pk, at_bat_number, responsible_pitcher_id, earned, runner_id))
 
     # INGEST GAMES AND PLAYERS
     for col in GAME_COLS:
