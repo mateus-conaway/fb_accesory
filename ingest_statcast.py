@@ -32,8 +32,6 @@ PITCH_COLS = [
     "plate_z",
     "sz_top",
     "sz_bot",
-    "hc_x",
-    "hc_y",
     "hit_distance_sc",
     "launch_angle",
     "balls",
@@ -231,8 +229,8 @@ def ingest_statcast(date_string: str) -> None:
         pfx_z = float(pitches_df["pfx_z"].iat[i]) * 12 # convert inches to feet
         plate_x = float(pitches_df["plate_x"].iat[i])
         plate_z = float(pitches_df["plate_z"].iat[i])
-        sz_top = float(pitches_df["sz_top"].iat[i])
-        sz_bot = float(pitches_df["sz_bot"].iat[i])
+        sz_top = float(pitches_df["sz_top"].iat[i]) * 12 # convert inches to feet
+        sz_bot = float(pitches_df["sz_bot"].iat[i]) * 12 # convert inches to feet
         hit_distance = float(pitches_df["hit_distance_sc"].iat[i])
         launch_angle = float(pitches_df["launch_angle"].iat[i])
         balls = int(pitches_df["balls"].iat[i])
