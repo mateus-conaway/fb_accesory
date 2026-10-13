@@ -28,11 +28,18 @@ PITCH_COLS = [
     "release_spin_rate",
     "pfx_x",
     "pfx_z",
+    "plate_x",
+    "plate_z",
+    "sz_top",
+    "sz_bot",
+    "hc_x",
+    "hc_y",
     "hit_distance_sc",
     "launch_angle",
     "balls",
     "strikes",
     "release_speed",
+    "release_extension",
     "launch_speed",
     "at_bat_number",
     "pitch_number",
@@ -218,9 +225,14 @@ def ingest_statcast(date_string: str) -> None:
         result_type = str(pitches_df["type"].iat[i])
         zone = int(pitches_df["zone"].iat[i])
         release_speed = float(pitches_df["release_speed"].iat[i])
+        release_extension = float(pitches_df["release_extension"].iat[i]) * 12 # convert inches to feet
         release_spin = float(pitches_df["release_spin_rate"].iat[i])
         pfx_x = float(pitches_df["pfx_x"].iat[i]) * 12 # convert inches to feet
         pfx_z = float(pitches_df["pfx_z"].iat[i]) * 12 # convert inches to feet
+        plate_x = float(pitches_df["plate_x"].iat[i])
+        plate_z = float(pitches_df["plate_z"].iat[i])
+        sz_top = float(pitches_df["sz_top"].iat[i])
+        sz_bot = float(pitches_df["sz_bot"].iat[i])
         hit_distance = float(pitches_df["hit_distance_sc"].iat[i])
         launch_angle = float(pitches_df["launch_angle"].iat[i])
         balls = int(pitches_df["balls"].iat[i])
@@ -242,7 +254,7 @@ def ingest_statcast(date_string: str) -> None:
             continue
         else:
             try:
-                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, zone, release_spin, pfx_x, pfx_z, hit_distance, launch_angle, balls, strikes, release_speed, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, zone, release_spin, pfx_x, pfx_z, hit_distance, launch_angle, balls, strikes, release_speed, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
+                conn.execute("INSERT OR REPLACE INTO pitches (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, zone, release_spin, pfx_x, pfx_z, plate_x, plate_z, sz_top, sz_bot, hit_distance, launch_angle, balls, strikes, release_speed,  release_extension, launch_speed, at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (game_pk, game_date, game_year, batter, pitcher, home_team, away_team, stand, p_throws, pitch_type, events, description, result_type, zone, release_spin, pfx_x, pfx_z, plate_x, plate_z, sz_top, sz_bot, hit_distance, launch_angle, balls, strikes, release_speed, release_extension, launch_speeds[i], at_bat_number, pitch_number, inning, inning_topbot, outs_when_up, bat_score, fld_score, post_bat_score, post_fld_score))
             except Exception as e:
                 print(f"Error: {e}")
 
@@ -355,10 +367,10 @@ def parse_iso_date(value: str) -> date:
 
 def main() -> None:
 
-    # conn = get_db_connection(DB_PATH)
-    # with open(Path(__file__).parent / "schema.sql", "r") as f:
-    #     conn.executescript(f.read())
-    # conn.close()
+    conn = get_db_connection(DB_PATH)
+    with open(Path(__file__).parent / "schema.sql", "r") as f:
+        conn.executescript(f.read())
+    conn.close()
     
 
     parser = argparse.ArgumentParser(
