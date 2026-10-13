@@ -1,8 +1,8 @@
-import type { HitterStatLines } from "../api.ts";
+import type { BatterStatLines } from "../api.ts";
 
 import type { PitcherStatLines, PlayerSlot } from "../api.ts";
 
-const HITTER_STATLINE_KEYS: (keyof HitterStatLines)[] = [
+const Batter_STATLINE_KEYS: (keyof BatterStatLines)[] = [
   "season_stats",
 
   "career_vs_pitcher",
@@ -23,23 +23,23 @@ const HITTER_STATLINE_KEYS: (keyof HitterStatLines)[] = [
 const PITCHER_STATLINE_KEYS: (keyof PitcherStatLines)[] = [
   "era",
 
-  "career_vs_hitter_one",
+  "career_vs_Batter_one",
 
-  "career_vs_hitter_two",
+  "career_vs_Batter_two",
 
-  "career_vs_hitter_three",
+  "career_vs_Batter_three",
 
-  "career_vs_hitter_four",
+  "career_vs_Batter_four",
 
-  "career_vs_hitter_five",
+  "career_vs_Batter_five",
 
-  "career_vs_hitter_six",
+  "career_vs_Batter_six",
 
-  "career_vs_hitter_seven",
+  "career_vs_Batter_seven",
 
-  "career_vs_hitter_eight",
+  "career_vs_Batter_eight",
 
-  "career_vs_hitter_nine",
+  "career_vs_Batter_nine",
 ];
 
 /** [ab, pa, hits, bb, hbp, k, single, double, triples, home_run, rbi, avg, obp, slg, ops] */
@@ -101,13 +101,13 @@ export default function PlayerContainer({
 
   const stats = playerData?.stats;
 
-  /** Hitter and pitcher lines share no keys, so read them by name */
+  /** Batter and pitcher lines share no keys, so read them by name */
   const statValues = stats as
     | Record<string, number[] | number | null>
     | undefined;
 
   const keys: readonly string[] =
-    position === "Hitter" ? HITTER_STATLINE_KEYS : PITCHER_STATLINE_KEYS;
+    position === "Batter" ? Batter_STATLINE_KEYS : PITCHER_STATLINE_KEYS;
 
   return (
     <div

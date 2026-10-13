@@ -6,15 +6,15 @@
 
 ## 1. What This Project Is
 
-**Fantasy Scout Report** is a fantasy baseball scouting tool. The purpose is to give a fantasy baseball manager the *matchup-specific* splits that normal stat sites bury or don't show at all, so they can make better start/sit and waiver decisions for a given day's games.
+**Fantasy Scout Report** is a fantasy baseball scouting tool. The purpose is to give a fantasy baseball manager the _matchup-specific_ splits that normal stat sites bury or don't show at all, so they can make better start/sit and waiver decisions for a given day's games.
 
 Instead of just showing "Player X is hitting .270 this season," the app answers questions like:
 
-- How has this hitter performed **against this specific pitcher**, career and this season?
-- How does this hitter perform **against right-handed vs left-handed pitching**?
-- How does this hitter perform **against offspeed pitches**?
-- How does this hitter perform **at this specific ballpark**?
-- For a starting pitcher, how has he performed **against each of the nine hitters in tonight's opposing lineup**?
+- How has this Batter performed **against this specific pitcher**, career and this season?
+- How does this Batter perform **against right-handed vs left-handed pitching**?
+- How does this Batter perform **against offspeed pitches**?
+- How does this Batter perform **at this specific ballpark**?
+- For a starting pitcher, how has he performed **against each of the nine Batters in tonight's opposing lineup**?
 
 The app pulls raw pitch-by-pitch Statcast data into a local SQLite database, computes these splits on demand, and displays two players side by side so you can compare them.
 
@@ -24,13 +24,13 @@ The app pulls raw pitch-by-pitch Statcast data into a local SQLite database, com
 
 ## 2. Tech Stack
 
-| Layer | Technology |
-|---|---|
+| Layer       | Technology                                                                                                                                    |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Data source | [`pybaseball`](https://github.com/jldbc/pybaseball) (Baseball Savant / Statcast), [`MLB-StatsAPI`](https://github.com/toddrob99/MLB-StatsAPI) |
-| Database | SQLite (`fantasy_baseball.db`) |
-| Backend | Python + FastAPI (served by uvicorn on port **8000**) |
-| Frontend | React 19 + TypeScript, built with Vite (dev server on port **5173**) |
-| Styling | Tailwind CSS 3 (custom dark theme) |
+| Database    | SQLite (`fantasy_baseball.db`)                                                                                                                |
+| Backend     | Python + FastAPI (served by uvicorn on port **8000**)                                                                                         |
+| Frontend    | React 19 + TypeScript, built with Vite (dev server on port **5173**)                                                                          |
+| Styling     | Tailwind CSS 3 (custom dark theme)                                                                                                            |
 
 ### Running it locally
 
@@ -84,15 +84,15 @@ fb_accesory/
         └── components/
 ```
 
-*(JSON, CSV, config, `.gitignore`, and image files are omitted per request. `node_modules/`, `__pycache__/`, and `ui/dist/` are build/vendor artifacts and are ignored here too.)*
+_(JSON, CSV, config, `.gitignore`, and image files are omitted per request. `node_modules/`, `__pycache__/`, and `ui/dist/` are build/vendor artifacts and are ignored here too.)_
 
 ### Root-level Python files
 
-| File | What it does |
-|---|---|
-| **`ingest_statcast.py`** | The heart of the data layer. Downloads a day of Statcast pitch data, cleans it, and writes rows into the `players`, `games`, and `pitches` tables. Also assigns each player a team abbreviation. Fully detailed in §4. |
-| **`update_splits.py`** | An abandoned attempt to populate the pre-aggregate split tables from `pitches`. Roughly 30 lines, contains an invalid SQL statement (a stray comma before `FROM`), no `main()`, and writes nothing. Safe to ignore or delete. |
-| **`schema.sql`** | The complete database definition: drops and recreates the core tables, defines the pre-aggregate tables and 28 indexes, and seeds the 30-row `ballparks` table and 13-row `pitch_type_class` table. Run manually (the call is currently commented out in `ingest_statcast.main()`). |
+| File                     | What it does                                                                                                                                                                                                                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`ingest_statcast.py`** | The heart of the data layer. Downloads a day of Statcast pitch data, cleans it, and writes rows into the `players`, `games`, and `pitches` tables. Also assigns each player a team abbreviation. Fully detailed in §4.                                                              |
+| **`update_splits.py`**   | An abandoned attempt to populate the pre-aggregate split tables from `pitches`. Roughly 30 lines, contains an invalid SQL statement (a stray comma before `FROM`), no `main()`, and writes nothing. Safe to ignore or delete.                                                       |
+| **`schema.sql`**         | The complete database definition: drops and recreates the core tables, defines the pre-aggregate tables and 28 indexes, and seeds the 30-row `ballparks` table and 13-row `pitch_type_class` table. Run manually (the call is currently commented out in `ingest_statcast.main()`). |
 
 ### `api/` — the FastAPI backend
 
@@ -106,23 +106,23 @@ fb_accesory/
 
 #### `api/routers/` — HTTP endpoint definitions
 
-| File | Endpoints |
-|---|---|
-| **`players.py`** | `GET /players/search?name=` — case-insensitive `LIKE` search on `name_full`, returns up to 20 players.<br>`GET /players/{player_id}` — full player row, 404 if not found. |
-| **`schedule.py`** | `GET /schedule` — returns the in-memory cached schedule `{date, games}`.<br>`POST /schedule/refresh` — re-fetches today's schedule from MLB StatsAPI and returns it. |
-| **`stats.py`** | `GET /stats/lineup?game_pk=&side=` — the nine starters for one side of a game; returns **422** if fewer than 9 starters are posted yet.<br>`GET /stats/hitter/{batter_id}?pitcher_id=&hand=&pitch_type=&ballpark=` — eight hitter stat lines.<br>`GET /stats/pitcher/{pitcher_id}?hitter_one=…&hitter_nine=&game_pk=` — the pitcher's ERA plus nine career stat lines, one per opposing hitter. |
-| **`games.py`** | Empty placeholder. Not mounted in `main.py`. |
+| File              | Endpoints                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`players.py`**  | `GET /players/search?name=` — case-insensitive `LIKE` search on `name_full`, returns up to 20 players.<br>`GET /players/{player_id}` — full player row, 404 if not found.                                                                                                                                                                                                                       |
+| **`schedule.py`** | `GET /schedule` — returns the in-memory cached schedule `{date, games}`.<br>`POST /schedule/refresh` — re-fetches today's schedule from MLB StatsAPI and returns it.                                                                                                                                                                                                                            |
+| **`stats.py`**    | `GET /stats/lineup?game_pk=&side=` — the nine starters for one side of a game; returns **422** if fewer than 9 starters are posted yet.<br>`GET /stats/Batter/{batter_id}?pitcher_id=&hand=&pitch_type=&ballpark=` — eight Batter stat lines.<br>`GET /stats/pitcher/{pitcher_id}?Batter_one=…&Batter_nine=&game_pk=` — the pitcher's ERA plus nine career stat lines, one per opposing Batter. |
+| **`games.py`**    | Empty placeholder. Not mounted in `main.py`.                                                                                                                                                                                                                                                                                                                                                    |
 
 #### `api/services/` — business logic (SQL and external API calls)
 
-| File | What it does |
-|---|---|
-| **`batter_stats_service.py`** | The active hitter-stats module. Defines the event-name sets (`AB_EVENTS`, `PA_EVENTS`, `BB_EVENTS`, `K_EVENTS`, etc.) used to classify plate-appearance outcomes, the `calculate_stats()` aggregator, and eight query functions: `season_stats`, `career_vs_pitcher`, `season_vs_pitcher`, `career_vs_hand`, `season_vs_hand`, `season_vs_offspeed`, `career_at_ballpark`, `season_at_ballpark`. Also `get_year()`, which determines "the current season" by reading the most recent `game_year` in `pitches`. |
-| **`pitcher_stats_service.py`** | Pitcher-side logic. Contains the innings-pitched reconstruction algorithm (`calculate_outs`, `calculate_innings_pitched`, `parse_innings_pitched`), earned-run lookup via MLB StatsAPI (`get_earned_runs`), `calculate_era`, and `get_starting_lineup`. Defines its own duplicate `get_db()` rather than importing from `api/database.py`. |
-| **`schedule_service.py`** | Holds today's schedule in module-level globals (`_schedule_games`, `_schedule_date`). `fetch_schedule()` calls `statsapi.schedule()`; `refresh_schedule()` updates the cache and swallows/logs errors so a failed fetch can't crash startup. Maps MLB team names to your `ballparks.team_abbrev` values, including an alias for the Athletics rebrand (`OAK` ↔ `ATH`). Also `find_game_for_team()` and `lineup_side_for_pitcher()`. |
-| **`stats_service.py`** | A byte-for-byte duplicate of `batter_stats_service.py`, left over from the rename. **Not imported anywhere** — dead code. |
-| **`mlbstatsapi.py`** | Your scratchpad for experimenting with the `statsapi` library. Contains `get_roster`, `get_mlb_teams`, an earlier `get_starting_lineup` with `print` debugging, and two unrelated math experiments (`one_percent`, `min_innings`). Not imported by the API — the production version of `get_starting_lineup` was copied out of here into `pitcher_stats_service.py`. |
-| **`__init__.py`** | A single comment marking the package. |
+| File                           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`batter_stats_service.py`**  | The active Batter-stats module. Defines the event-name sets (`AB_EVENTS`, `PA_EVENTS`, `BB_EVENTS`, `K_EVENTS`, etc.) used to classify plate-appearance outcomes, the `calculate_stats()` aggregator, and eight query functions: `season_stats`, `career_vs_pitcher`, `season_vs_pitcher`, `career_vs_hand`, `season_vs_hand`, `season_vs_offspeed`, `career_at_ballpark`, `season_at_ballpark`. Also `get_year()`, which determines "the current season" by reading the most recent `game_year` in `pitches`. |
+| **`pitcher_stats_service.py`** | Pitcher-side logic. Contains the innings-pitched reconstruction algorithm (`calculate_outs`, `calculate_innings_pitched`, `parse_innings_pitched`), earned-run lookup via MLB StatsAPI (`get_earned_runs`), `calculate_era`, and `get_starting_lineup`. Defines its own duplicate `get_db()` rather than importing from `api/database.py`.                                                                                                                                                                     |
+| **`schedule_service.py`**      | Holds today's schedule in module-level globals (`_schedule_games`, `_schedule_date`). `fetch_schedule()` calls `statsapi.schedule()`; `refresh_schedule()` updates the cache and swallows/logs errors so a failed fetch can't crash startup. Maps MLB team names to your `ballparks.team_abbrev` values, including an alias for the Athletics rebrand (`OAK` ↔ `ATH`). Also `find_game_for_team()` and `lineup_side_for_pitcher()`.                                                                            |
+| **`stats_service.py`**         | A byte-for-byte duplicate of `batter_stats_service.py`, left over from the rename. **Not imported anywhere** — dead code.                                                                                                                                                                                                                                                                                                                                                                                      |
+| **`mlbstatsapi.py`**           | Your scratchpad for experimenting with the `statsapi` library. Contains `get_roster`, `get_mlb_teams`, an earlier `get_starting_lineup` with `print` debugging, and two unrelated math experiments (`one_percent`, `min_innings`). Not imported by the API — the production version of `get_starting_lineup` was copied out of here into `pitcher_stats_service.py`.                                                                                                                                           |
+| **`__init__.py`**              | A single comment marking the package.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ### `ui/` — the React frontend
 
@@ -130,22 +130,22 @@ fb_accesory/
 
 #### `ui/src/`
 
-| File | What it does |
-|---|---|
-| **`main.tsx`** | Bootstrap. `ReactDOM.createRoot(...).render(<React.StrictMode><App /></React.StrictMode>)`. |
-| **`App.tsx`** | The root component and the **single source of truth for application state**: `bookmarkedPlayers`, `focusedSlot` (1 or 2), `playerSlot1`, `playerSlot2`, `hpFilter`, `scheduleGames`, `scheduleError`. Owns two effects: one that persists bookmarks to `localStorage` under the key `fb_bookmarked_players`, and one that fetches the schedule once on mount. Renders `Navbar`, `Sidebar`, and `MainContent`. |
-| **`api.ts`** | The entire network layer, isolated in one file. Exports the TypeScript types (`Player`, `ScheduleGame`, `ScheduleResponse`, `LineupStarter`, `HitterStatLines`, `PitcherStatLines`) and one function per backend endpoint. Also contains the pure helpers `abbrevsMatch`, `findGameForTeam`, and `lineupSideForPitcher`, which mirror the Python versions in `schedule_service.py`. `BASE_URL` is hardcoded to `http://localhost:8000`. |
-| **`index.css`** | Tailwind directives plus base layer styles: the `#1e1e1e` canvas background, `color-scheme: dark`, a custom `.bg-canvas` utility, and thin custom scrollbars. |
+| File            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`main.tsx`**  | Bootstrap. `ReactDOM.createRoot(...).render(<React.StrictMode><App /></React.StrictMode>)`.                                                                                                                                                                                                                                                                                                                                             |
+| **`App.tsx`**   | The root component and the **single source of truth for application state**: `bookmarkedPlayers`, `focusedSlot` (1 or 2), `playerSlot1`, `playerSlot2`, `hpFilter`, `scheduleGames`, `scheduleError`. Owns two effects: one that persists bookmarks to `localStorage` under the key `fb_bookmarked_players`, and one that fetches the schedule once on mount. Renders `Navbar`, `Sidebar`, and `MainContent`.                           |
+| **`api.ts`**    | The entire network layer, isolated in one file. Exports the TypeScript types (`Player`, `ScheduleGame`, `ScheduleResponse`, `LineupStarter`, `BatterStatLines`, `PitcherStatLines`) and one function per backend endpoint. Also contains the pure helpers `abbrevsMatch`, `findGameForTeam`, and `lineupSideForPitcher`, which mirror the Python versions in `schedule_service.py`. `BASE_URL` is hardcoded to `http://localhost:8000`. |
+| **`index.css`** | Tailwind directives plus base layer styles: the `#1e1e1e` canvas background, `color-scheme: dark`, a custom `.bg-canvas` utility, and thin custom scrollbars.                                                                                                                                                                                                                                                                           |
 
 #### `ui/src/components/`
 
-| Component | What it does |
-|---|---|
-| **`Navbar.tsx`** | The busiest component. Contains an internal (non-exported) `SearchBar` component and the **GO** button, which holds all the branching logic for fetching hitter vs pitcher stats. Local state: `selectedSearchPlayer`, `goLoading`, `goError`. Also holds four hardcoded placeholder constants (`TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK`) used for the hitter path. |
-| **`Sidebar.tsx`** | The "My Players" panel. Renders a `BookmarkedPlayer` for each bookmark and an H/P toggle. Purely presentational — no state of its own. |
-| **`BookmarkedPlayer.tsx`** | One bookmark row: player name, team, and a `DEL` button. |
-| **`MainContent.tsx`** | The slot selector (buttons "1" and "2") and the two side-by-side `PlayerContainer`s. Presentational. |
-| **`PlayerContainer.tsx`** | One player panel. Displays the player name, a `BB` (bookmark) button, the **Statlines** panel (fixed at 35% height), and a **Trends** panel that currently shows "Coming soon". Contains `formatStatline()`, which turns the 15-number stat array from the backend into three human-readable lines, plus the `HITTER_STATLINE_KEYS` / `PITCHER_STATLINE_KEYS` arrays that control which stat lines render and in what order. Handles `era` as a special case since it's a single number, not an array. |
+| Component                  | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`Navbar.tsx`**           | The busiest component. Contains an internal (non-exported) `SearchBar` component and the **GO** button, which holds all the branching logic for fetching Batter vs pitcher stats. Local state: `selectedSearchPlayer`, `goLoading`, `goError`. Also holds four hardcoded placeholder constants (`TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK`) used for the Batter path.                                                                                                          |
+| **`Sidebar.tsx`**          | The "My Players" panel. Renders a `BookmarkedPlayer` for each bookmark and an H/P toggle. Purely presentational — no state of its own.                                                                                                                                                                                                                                                                                                                                                                 |
+| **`BookmarkedPlayer.tsx`** | One bookmark row: player name, team, and a `DEL` button.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **`MainContent.tsx`**      | The slot selector (buttons "1" and "2") and the two side-by-side `PlayerContainer`s. Presentational.                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **`PlayerContainer.tsx`**  | One player panel. Displays the player name, a `BB` (bookmark) button, the **Statlines** panel (fixed at 35% height), and a **Trends** panel that currently shows "Coming soon". Contains `formatStatline()`, which turns the 15-number stat array from the backend into three human-readable lines, plus the `Batter_STATLINE_KEYS` / `PITCHER_STATLINE_KEYS` arrays that control which stat lines render and in what order. Handles `era` as a special case since it's a single number, not an array. |
 
 ---
 
@@ -165,7 +165,7 @@ Two external sources, used for different things:
 - `statsapi.schedule(start_date=..., end_date=...)` — today's games, including probable pitchers. Used by `schedule_service.py`.
 - `statsapi.get("game", {"gamePk": ...})` — the full live game feed. Used two ways: to read `liveData.boxscore.teams[side].players` for starting lineups, and to read a specific pitcher's `earnedRuns` for the ERA calculation.
 
-**Why the split:** Statcast gives you pitch-level granularity (pitch type, velocity, exit velocity, count state) which is what the splits are built from — but it doesn't tell you who is *starting tonight*. The MLB Stats API gives you schedule and lineup information but not pitch-level detail. So Statcast is warehoused locally and the Stats API is called live.
+**Why the split:** Statcast gives you pitch-level granularity (pitch type, velocity, exit velocity, count state) which is what the splits are built from — but it doesn't tell you who is _starting tonight_. The MLB Stats API gives you schedule and lineup information but not pitch-level detail. So Statcast is warehoused locally and the Stats API is called live.
 
 ### 4.2 How data gets into the database
 
@@ -199,6 +199,7 @@ for i in range(0, 30):
 This is the part worth re-reading, because most of the pipeline's logic is cleanup.
 
 #### Column selection
+
 The raw Statcast DataFrame has far more columns than you need. `PITCH_COLS` narrows it to 27: game identifiers, batter/pitcher IDs, both teams, batter stance and pitcher handedness, pitch type and name, `events`, `description`, `des`, `type`, release and launch speed, at-bat and pitch numbers, inning and half-inning, outs, and the four score fields.
 
 ```python
@@ -206,6 +207,7 @@ pitches_df = df[available_cols]
 ```
 
 #### Null handling
+
 Statcast leaves many fields empty (a pitch that doesn't end a plate appearance has no `events` value, a pitch that isn't hit has no `launch_speed`). Every null is converted to the integer `0`:
 
 ```python
@@ -217,6 +219,7 @@ This is a deliberate choice, and it's why every stat query in `batter_stats_serv
 `launch_speed` gets special treatment because `0` mph is meaningless: it's converted back to `None` (SQL `NULL`) when it's zero, and to a float otherwise.
 
 #### Type coercion
+
 `pybaseball` returns pandas types (`numpy.int64`, `pandas.Series` scalars) that the `sqlite3` driver rejects with `sqlite3.ProgrammingError: parameters are of unsupported type`. Every field is therefore explicitly cast in a row-by-row loop:
 
 ```python
@@ -228,20 +231,22 @@ release_speed = float(pitches_df["release_speed"].iat[i])
 The same problem is handled for player records by `series_to_sql()`, which pulls scalars out of the lookup DataFrame with `.iat[0]` and casts them.
 
 #### Pitch type normalization
+
 Statcast pitch codes are mapped to small integer IDs through the `PITCH_TYPES` dict, so `pitches.pitch_type` stores numbers, not strings:
 
-| Code | ID | | Code | ID |
-|---|---|---|---|---|
-| FF (4-seam) | 1 | | SL (slider) | 7 |
-| FC (cutter) | 2 | | KC (knuckle curve) | 8 |
-| FS (splitter) | 3 | | CU (curveball) | 9 |
-| SI (sinker) | 4 | | CH (changeup) | 10 |
-| ST (sweeper) | 5 | | SV (slurve) | 11 |
-| EP (eephus) | 6 | | FA (other) | 12 |
+| Code          | ID  |     | Code               | ID  |
+| ------------- | --- | --- | ------------------ | --- |
+| FF (4-seam)   | 1   |     | SL (slider)        | 7   |
+| FC (cutter)   | 2   |     | KC (knuckle curve) | 8   |
+| FS (splitter) | 3   |     | CU (curveball)     | 9   |
+| SI (sinker)   | 4   |     | CH (changeup)      | 10  |
+| ST (sweeper)  | 5   |     | SV (slurve)        | 11  |
+| EP (eephus)   | 6   |     | FA (other)         | 12  |
 
 The `pitch_type_class` table stores the human-readable mapping plus an `is_offspeed` flag, so offspeed queries can be driven from the database rather than hardcoded.
 
 #### Row filtering (junk pitches)
+
 Two categories of rows are skipped entirely:
 
 ```python
@@ -254,6 +259,7 @@ elif (description == "automatic_ball" or description == "automatic_strike") and 
 The second case matters because pitch-clock violations aren't real pitches — they'd inflate pitch counts. They're only kept when they actually produced a walk or strikeout.
 
 #### De-duplication for games
+
 A day of pitches contains thousands of rows per game, but you only want one `games` row per game. The DataFrame is first filtered to rows where all `GAME_COLS` are non-null, then reduced:
 
 ```python
@@ -261,6 +267,7 @@ games_df = df[["game_pk","game_date","game_year","home_team","away_team"]].drop_
 ```
 
 #### Player upsert strategy
+
 `upsert_players()` collects the unique batter and pitcher IDs for the day (via `set()`), casts them to `int`, looks each one up with `playerid_reverse_lookup`, skips any empty lookup result, and inserts with:
 
 ```sql
@@ -271,17 +278,18 @@ INSERT OR IGNORE INTO players (player_id, name_last, name_first, name_full, posi
 Two decisions embedded here:
 
 - **`INSERT OR IGNORE`, not `INSERT OR REPLACE`.** This was changed deliberately. `REPLACE` deletes and re-inserts the row, which wiped out `team_abbrev` (and `position`) on every subsequent ingest day. `IGNORE` leaves existing players untouched.
-- **`position` is inferred, not read from the data.** Statcast doesn't hand you a position, so a player who appears in the `batter` column is stored as `"Hitter"` and a player in the `pitcher` column as `"Pitcher"`. `name_full` is synthesized as `f"{first} {last}"` specifically so the search endpoint can do a single `LIKE` against one column.
+- **`position` is inferred, not read from the data.** Statcast doesn't hand you a position, so a player who appears in the `batter` column is stored as `"Batter"` and a player in the `pitcher` column as `"Pitcher"`. `name_full` is synthesized as `f"{first} {last}"` specifically so the search endpoint can do a single `LIKE` against one column.
 
 #### Team assignment (`assign_teams`)
+
 Statcast tells you the home and away team for each game, and `inning_topbot` tells you which half-inning a pitch occurred in — from those two facts you can deduce which team a player is on. In the top of an inning the **away** team bats and the **home** team pitches; in the bottom it's reversed. So four queries run per game:
 
-| Query | Half-inning | Yields |
-|---|---|---|
-| away batters | `Top` | `(batter, away_team)` |
-| home batters | `Bot` | `(batter, home_team)` |
-| away pitchers | `Bot` | `(pitcher, away_team)` |
-| home pitchers | `Top` | `(pitcher, home_team)` |
+| Query         | Half-inning | Yields                 |
+| ------------- | ----------- | ---------------------- |
+| away batters  | `Top`       | `(batter, away_team)`  |
+| home batters  | `Bot`       | `(batter, home_team)`  |
+| away pitchers | `Bot`       | `(pitcher, away_team)` |
+| home pitchers | `Top`       | `(pitcher, home_team)` |
 
 The results are unioned and written with:
 
@@ -297,94 +305,94 @@ UPDATE players SET team_abbrev = COALESCE(team_abbrev, ?) WHERE player_id = ?
 
 **`players`**
 
-| Column | Type | Notes |
-|---|---|---|
-| `player_id` | INTEGER | PRIMARY KEY (MLBAM ID) |
-| `name_last` | TEXT | NOT NULL |
-| `name_first` | TEXT | NOT NULL |
-| `name_full` | TEXT | NOT NULL — synthesized, used for search |
-| `position` | TEXT | NOT NULL — `"Hitter"` or `"Pitcher"` |
-| `mlb_played_first` | REAL | first MLB season |
-| `mlb_played_last` | REAL | most recent MLB season |
-| `team_abbrev` | TEXT | filled in by `assign_teams()` |
+| Column             | Type    | Notes                                   |
+| ------------------ | ------- | --------------------------------------- |
+| `player_id`        | INTEGER | PRIMARY KEY (MLBAM ID)                  |
+| `name_last`        | TEXT    | NOT NULL                                |
+| `name_first`       | TEXT    | NOT NULL                                |
+| `name_full`        | TEXT    | NOT NULL — synthesized, used for search |
+| `position`         | TEXT    | NOT NULL — `"Batter"` or `"Pitcher"`    |
+| `mlb_played_first` | REAL    | first MLB season                        |
+| `mlb_played_last`  | REAL    | most recent MLB season                  |
+| `team_abbrev`      | TEXT    | filled in by `assign_teams()`           |
 
 **`games`**
 
-| Column | Type | Notes |
-|---|---|---|
-| `game_pk` | INTEGER | PRIMARY KEY (MLB game ID) |
-| `game_date` | DATE | NOT NULL |
-| `game_year` | INTEGER | NOT NULL |
-| `home_team` | TEXT | NOT NULL |
-| `away_team` | TEXT | NOT NULL |
+| Column      | Type    | Notes                     |
+| ----------- | ------- | ------------------------- |
+| `game_pk`   | INTEGER | PRIMARY KEY (MLB game ID) |
+| `game_date` | DATE    | NOT NULL                  |
+| `game_year` | INTEGER | NOT NULL                  |
+| `home_team` | TEXT    | NOT NULL                  |
+| `away_team` | TEXT    | NOT NULL                  |
 
 **`pitches`** — the fact table. Every stat in the app is derived from this.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `game_pk` | INTEGER | NOT NULL, FK → `games` |
-| `game_date` | DATE | NOT NULL |
-| `game_year` | INTEGER | NOT NULL — used for season filtering |
-| `batter` | INTEGER | NOT NULL, FK → `players` |
-| `pitcher` | INTEGER | NOT NULL, FK → `players` |
-| `home_team` | TEXT | NOT NULL — doubles as the ballpark key |
-| `away_team` | TEXT | NOT NULL |
-| `stand` | TEXT | NOT NULL — batter stance (L/R) |
-| `p_throws` | TEXT | NOT NULL — pitcher handedness (L/R) |
-| `pitch_type` | TEXT | stores the integer ID from `PITCH_TYPES` |
-| `pitch_name` | TEXT | declared but never populated by the ingest |
-| `events` | TEXT | plate-appearance outcome, or `0` if the pitch didn't end one |
-| `description` | TEXT | pitch-level result (e.g. `swinging_strike`, `automatic_ball`) |
-| `story_description` | TEXT | Statcast's `des` narrative field |
-| `result_type` | TEXT | Statcast `type` (B/S/X) |
-| `release_speed` | REAL | pitch velocity |
-| `launch_speed` | REAL | exit velocity, `NULL` when not batted |
-| `at_bat_number` | INTEGER | NOT NULL — sequence within the game |
-| `pitch_number` | INTEGER | NOT NULL — sequence within the at-bat |
-| `inning` | INTEGER | NOT NULL |
-| `inning_topbot` | TEXT | `Top` / `Bot` — used to derive team assignment |
-| `outs_when_up` | INTEGER | used by the innings-pitched algorithm |
-| `bat_score` | INTEGER | batting team's score before the PA |
-| `fld_score` | INTEGER | fielding team's score before the PA |
-| `post_bat_score` | INTEGER | batting team's score after — RBIs come from the delta |
-| `post_fld_score` | INTEGER | fielding team's score after |
+| Column              | Type    | Notes                                                         |
+| ------------------- | ------- | ------------------------------------------------------------- |
+| `id`                | INTEGER | PRIMARY KEY AUTOINCREMENT                                     |
+| `game_pk`           | INTEGER | NOT NULL, FK → `games`                                        |
+| `game_date`         | DATE    | NOT NULL                                                      |
+| `game_year`         | INTEGER | NOT NULL — used for season filtering                          |
+| `batter`            | INTEGER | NOT NULL, FK → `players`                                      |
+| `pitcher`           | INTEGER | NOT NULL, FK → `players`                                      |
+| `home_team`         | TEXT    | NOT NULL — doubles as the ballpark key                        |
+| `away_team`         | TEXT    | NOT NULL                                                      |
+| `stand`             | TEXT    | NOT NULL — batter stance (L/R)                                |
+| `p_throws`          | TEXT    | NOT NULL — pitcher handedness (L/R)                           |
+| `pitch_type`        | TEXT    | stores the integer ID from `PITCH_TYPES`                      |
+| `pitch_name`        | TEXT    | declared but never populated by the ingest                    |
+| `events`            | TEXT    | plate-appearance outcome, or `0` if the pitch didn't end one  |
+| `description`       | TEXT    | pitch-level result (e.g. `swinging_strike`, `automatic_ball`) |
+| `story_description` | TEXT    | Statcast's `des` narrative field                              |
+| `result_type`       | TEXT    | Statcast `type` (B/S/X)                                       |
+| `release_speed`     | REAL    | pitch velocity                                                |
+| `launch_speed`      | REAL    | exit velocity, `NULL` when not batted                         |
+| `at_bat_number`     | INTEGER | NOT NULL — sequence within the game                           |
+| `pitch_number`      | INTEGER | NOT NULL — sequence within the at-bat                         |
+| `inning`            | INTEGER | NOT NULL                                                      |
+| `inning_topbot`     | TEXT    | `Top` / `Bot` — used to derive team assignment                |
+| `outs_when_up`      | INTEGER | used by the innings-pitched algorithm                         |
+| `bat_score`         | INTEGER | batting team's score before the PA                            |
+| `fld_score`         | INTEGER | fielding team's score before the PA                           |
+| `post_bat_score`    | INTEGER | batting team's score after — RBIs come from the delta         |
+| `post_fld_score`    | INTEGER | fielding team's score after                                   |
 
 **`ballparks`** — seeded with all 30 teams in `schema.sql`.
 
-| Column | Type |
-|---|---|
-| `team_abbrev` | TEXT |
+| Column          | Type |
+| --------------- | ---- |
+| `team_abbrev`   | TEXT |
 | `ballpark_name` | TEXT |
-| `team_name` | TEXT |
+| `team_name`     | TEXT |
 
 Used by `schedule_service.py` to translate MLB Stats API team names (e.g. `"New York Yankees"`) into your abbreviations (`"NYY"`).
 
 **`pitch_type_class`** — seeded with 13 rows.
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY |
-| `pitch_type` | TEXT | Statcast code |
-| `pitch_name` | TEXT | human-readable name |
+| Column        | Type    | Notes                                          |
+| ------------- | ------- | ---------------------------------------------- |
+| `id`          | INTEGER | PRIMARY KEY                                    |
+| `pitch_type`  | TEXT    | Statcast code                                  |
+| `pitch_name`  | TEXT    | human-readable name                            |
 | `is_offspeed` | INTEGER | NOT NULL — `1` for offspeed, `0` for fastballs |
 
 #### Pre-aggregate tables (defined, **not yet populated**)
 
 `schema.sql` also defines ten rollup tables. Nothing currently writes to them — `update_splits.py` was the intended populator and was never finished. Every stat the app serves today is computed live from `pitches`. These exist as a performance escape hatch for later.
 
-| Table | Primary key | Columns beyond the key |
-|---|---|---|
-| `pitcher_arsenal` | `(player_id, year, pitch_type)` | `pitch_name`, `usage_pct`, `pitches` |
-| `pitcher_game_stats` | `(game_pk, pitcher)` | `game_date`, `ip`, `er`, `k`, `bb`, `hbp`, `hr`, `pitches` |
-| `batter_game_stats` | `(game_pk, batter)` | `game_date`, `ab`, `h`, `doubles`, `triples`, `hr`, `bb`, `hbp`, `so`, `pa`, `bip_count`, `hard_hit_count`, `ev_count` |
-| `batter_vs_pitcher` | `(batter, pitcher)` | `ab`, `h`, `doubles`, `triples`, `hr`, `rbi`, `bb`, `hbp`, `so`, `avg`, `obp`, `slg`, `ops` |
-| `batter_vs_hand` | `(batter, p_throws, game_year)` | same stat block as above |
-| `batter_at_ballpark` | `(batter, home_team, game_year)` | same stat block |
-| `batter_vs_pitcher_pitch_type` | `(batter, pitcher, game_year, pitch_type)` | same stat block |
-| `pitcher_vs_batter` | `(pitcher, batter)` | same stat block |
-| `pitcher_vs_hand` | `(pitcher, stand, game_year)` | same stat block |
-| `pitcher_at_ballpark` | `(pitcher, home_team, game_year)` | same stat block |
+| Table                          | Primary key                                | Columns beyond the key                                                                                                 |
+| ------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `pitcher_arsenal`              | `(player_id, year, pitch_type)`            | `pitch_name`, `usage_pct`, `pitches`                                                                                   |
+| `pitcher_game_stats`           | `(game_pk, pitcher)`                       | `game_date`, `ip`, `er`, `k`, `bb`, `hbp`, `hr`, `pitches`                                                             |
+| `batter_game_stats`            | `(game_pk, batter)`                        | `game_date`, `ab`, `h`, `doubles`, `triples`, `hr`, `bb`, `hbp`, `so`, `pa`, `bip_count`, `hard_hit_count`, `ev_count` |
+| `batter_vs_pitcher`            | `(batter, pitcher)`                        | `ab`, `h`, `doubles`, `triples`, `hr`, `rbi`, `bb`, `hbp`, `so`, `avg`, `obp`, `slg`, `ops`                            |
+| `batter_vs_hand`               | `(batter, p_throws, game_year)`            | same stat block as above                                                                                               |
+| `batter_at_ballpark`           | `(batter, home_team, game_year)`           | same stat block                                                                                                        |
+| `batter_vs_pitcher_pitch_type` | `(batter, pitcher, game_year, pitch_type)` | same stat block                                                                                                        |
+| `pitcher_vs_batter`            | `(pitcher, batter)`                        | same stat block                                                                                                        |
+| `pitcher_vs_hand`              | `(pitcher, stand, game_year)`              | same stat block                                                                                                        |
+| `pitcher_at_ballpark`          | `(pitcher, home_team, game_year)`          | same stat block                                                                                                        |
 
 #### Indexes
 
@@ -394,7 +402,7 @@ Used by `schedule_service.py` to translate MLB Stats API team names (e.g. `"New 
 
 Worth remembering, because it explains the shape of the API responses.
 
-Every hitter query function returns **full pitch rows** — the raw list of terminal plate-appearance rows matching the split. For example:
+Every Batter query function returns **full pitch rows** — the raw list of terminal plate-appearance rows matching the split. For example:
 
 ```sql
 SELECT * FROM pitches
@@ -438,7 +446,7 @@ This is the least obvious code in the project, so here's the reasoning.
 
 1. Find the pitcher's **first** and **last** plate appearance that day (by `at_bat_number`).
 2. Compute the raw deltas: `inning_delta = last.inning - first.inning`, `outs_delta = last.outs_when_up - first.outs_when_up`.
-3. `outs_when_up` is the out count *before* the plate appearance, so the outs recorded *on* the final PA must be added manually: +1 for `SINGLE_OUT_EVENTS`, +2 for `DOUBLE_OUT_EVENTS` (double plays), +3 for `TRIPLE_OUT_EVENTS`.
+3. `outs_when_up` is the out count _before_ the plate appearance, so the outs recorded _on_ the final PA must be added manually: +1 for `SINGLE_OUT_EVENTS`, +2 for `DOUBLE_OUT_EVENTS` (double plays), +3 for `TRIPLE_OUT_EVENTS`.
 4. Look up the **next** plate appearance in the game (`at_bat_number + 1`, any pitcher) to detect an inning rollover the pitcher's own rows can't reveal. If `next.outs_when_up == 0` the inning ended, so add `3 - last.outs_when_up`; otherwise add the difference.
 5. Normalize: 3 outs becomes +1 inning and 0 outs; a negative out count borrows from the inning count.
 6. Return `(innings × 3) + outs` as total outs.
@@ -470,20 +478,23 @@ Since you were learning this when you built it, here is the mental model.
 
 **They talk over HTTP.** The only thing that connects them is the browser making HTTP requests. There is no magic import, no shared type checking across the boundary. The frontend sends a URL; the backend sends back a JSON string.
 
-**The contract is the URL + JSON shape.** When `api.ts` declares `Promise<HitterStatLines>`, that is a *promise you are making to TypeScript*, not something TypeScript verified against Python. If you change a dict key in `stats.py`, TypeScript will not complain — it will break at runtime. This is why the `HitterStatLines` / `PitcherStatLines` types in `api.ts` need to be kept in sync with the return dicts in `api/routers/stats.py` by hand.
+**The contract is the URL + JSON shape.** When `api.ts` declares `Promise<BatterStatLines>`, that is a _promise you are making to TypeScript_, not something TypeScript verified against Python. If you change a dict key in `stats.py`, TypeScript will not complain — it will break at runtime. This is why the `BatterStatLines` / `PitcherStatLines` types in `api.ts` need to be kept in sync with the return dicts in `api/routers/stats.py` by hand.
 
 **What actually enables the communication — four pieces:**
 
 1. **`fetch()`** — the browser's built-in HTTP client. Every call in `api.ts` boils down to `fetch(url)`. It returns a `Promise`, which is why every API function is `async` and every caller uses `await`.
 
 2. **REST endpoints in FastAPI.** Decorators map URLs to Python functions:
+
    ```python
-   @router.get("/hitter/{batter_id}")
+   @router.get("/Batter/{batter_id}")
    def get_batter_stats(batter_id: int, pitcher_id: int, hand: str, ...):
    ```
+
    FastAPI reads the function signature to decide where each value comes from. A name that appears in the URL pattern (`{batter_id}`) is a **path parameter**; every other parameter becomes a **query parameter** (`?pitcher_id=…&hand=…`). It also coerces and validates types — `batter_id: int` means a non-numeric value returns a 422 error before your code runs. Returning a Python dict is enough; FastAPI serializes it to JSON and sets the `Content-Type` header.
 
-3. **CORS.** Browsers enforce the *same-origin policy*: JavaScript loaded from `localhost:5173` is not allowed to read a response from `localhost:8000`, because a different port counts as a different origin. Without an explicit exception, the request is sent but the browser refuses to hand you the response. That exception is what `CORSMiddleware` provides:
+3. **CORS.** Browsers enforce the _same-origin policy_: JavaScript loaded from `localhost:5173` is not allowed to read a response from `localhost:8000`, because a different port counts as a different origin. Without an explicit exception, the request is sent but the browser refuses to hand you the response. That exception is what `CORSMiddleware` provides:
+
    ```python
    app.add_middleware(
        CORSMiddleware,
@@ -493,6 +504,7 @@ Since you were learning this when you built it, here is the mental model.
        allow_headers=["*"],
    )
    ```
+
    The backend responds with an `Access-Control-Allow-Origin` header, and the browser then permits the read. This is a **browser** rule only — `localhost:8000/docs` and `curl` work fine without it, which is a common source of "it works in the docs but not in my app" confusion.
 
 4. **React state.** Receiving JSON changes nothing on screen by itself. The value has to be written into state with a setter (`setPlayerSlot1(...)`), which triggers a re-render, which causes the component to display the new data. **Fetch → setState → re-render** is the loop.
@@ -569,53 +581,55 @@ No backend call.
 
 Note that the panel still shows the "Player Name" placeholder at this point — the object stored by this path is `{ player }`, which has no `.name` or `.stats`. Real data appears only after GO.
 
-#### Flow D — Pressing GO for a **hitter**
+#### Flow D — Pressing GO for a **Batter**
 
 1. Click fires `handleGoClick()` in `Navbar.tsx`.
 2. Guard: return immediately if there's no `selectedSearchPlayer`.
 3. `setGoLoading(true)`, `setGoError(null)`. The button renders `…` and disables itself.
-4. `selectedSearchPlayer.position === "Hitter"` is true (that value came from the `players.position` column, which the ingest set), so the hitter branch runs:
+4. `selectedSearchPlayer.position === "Batter"` is true (that value came from the `players.position` column, which the ingest set), so the Batter branch runs:
    ```ts
-   stats = await getHitterStats(
+   stats = await getBatterStats(
      String(playerIdForGo),
-     TEST_PITCHER_ID,   // "656492"
-     TEST_HAND,         // "R"
-     TEST_PITCH_TYPE,   // "CH"
-     TEST_BALLPARK,     // "NYY"
+     TEST_PITCHER_ID, // "656492"
+     TEST_HAND, // "R"
+     TEST_PITCH_TYPE, // "CH"
+     TEST_BALLPARK, // "NYY"
    );
    ```
-   These four are **hardcoded placeholders** — the opposing pitcher and ballpark are not yet wired to the schedule for hitters.
-5. `getHitterStats` builds the query string with `URLSearchParams` and fetches:
-   → `GET http://localhost:8000/stats/hitter/592450?pitcher_id=656492&hand=R&pitch_type=CH&ballpark=NYY`
+   These four are **hardcoded placeholders** — the opposing pitcher and ballpark are not yet wired to the schedule for Batters.
+5. `getBatterStats` builds the query string with `URLSearchParams` and fetches:
+   → `GET http://localhost:8000/stats/Batter/592450?pitcher_id=656492&hand=R&pitch_type=CH&ballpark=NYY`
 6. FastAPI routes to `get_batter_stats()`. `batter_id` comes from the path; `pitcher_id`, `hand`, `pitch_type`, `ballpark` come from the query string.
 7. The handler calls **eight** service functions, wrapping each in `calculate_stats()`:
 
-   | Response key | Service call |
-   |---|---|
-   | `season_stats` | `season_stats(batter_id)` |
-   | `career_vs_pitcher` | `career_vs_pitcher(batter_id, pitcher_id)` |
-   | `season_vs_pitcher` | `season_vs_pitcher(batter_id, pitcher_id)` |
-   | `career_vs_hand` | `career_vs_hand(batter_id, hand)` |
-   | `season_vs_hand` | `season_vs_hand(batter_id, hand)` |
+   | Response key         | Service call                                |
+   | -------------------- | ------------------------------------------- |
+   | `season_stats`       | `season_stats(batter_id)`                   |
+   | `career_vs_pitcher`  | `career_vs_pitcher(batter_id, pitcher_id)`  |
+   | `season_vs_pitcher`  | `season_vs_pitcher(batter_id, pitcher_id)`  |
+   | `career_vs_hand`     | `career_vs_hand(batter_id, hand)`           |
+   | `season_vs_hand`     | `season_vs_hand(batter_id, hand)`           |
    | `season_vs_offspeed` | `season_vs_offspeed(batter_id, pitch_type)` |
-   | `career_at_ballpark` | `career_at_ballpark(batter_id, ballpark)` |
-   | `season_at_ballpark` | `season_at_ballpark(batter_id, ballpark)` |
+   | `career_at_ballpark` | `career_at_ballpark(batter_id, ballpark)`   |
+   | `season_at_ballpark` | `season_at_ballpark(batter_id, ballpark)`   |
 
    Each service function queries `pitches`, and `calculate_stats()` reduces the rows to the 15-number array.
+
 8. Response: a JSON object with eight keys, each a 15-element array.
 9. If `!response.ok`, `api.ts` throws `Error("Stats unavailable")`.
 10. On success, `handleGoClick` calls up to `App`:
     ```ts
-    onGoClick({ name: "First Last", stats, position: "Hitter" });
+    onGoClick({ name: "First Last", stats, position: "Batter" });
     ```
 11. `App.handleGoClick` sees an object with `.stats`, builds `{ name, stats, position }`, and writes it to `playerSlot1` or `playerSlot2` based on `focusedSlot`.
 12. Re-render: `App` → `MainContent` → the appropriate `PlayerContainer` receives the new `playerData`.
-13. `PlayerContainer` reads `position === "Hitter"`, selects `HITTER_STATLINE_KEYS`, and maps over the eight keys. For each one it calls `formatStatline(arr)` and renders three lines:
+13. `PlayerContainer` reads `position === "Batter"`, selects `Batter_STATLINE_KEYS`, and maps over the eight keys. For each one it calls `formatStatline(arr)` and renders three lines:
     - `".284: 27/95"`
     - `"Outcome Breakdown: 18 singles, 5 doubles, 0 triples, 4 home runs, …"`
     - `"OBP/SLG/OPS: 0.351/0.474/0.825"`
 
     The key label is displayed with underscores replaced by spaces.
+
 14. `finally { setGoLoading(false) }` re-enables the button.
 
 On any thrown error, the message is caught, stored via `setGoError(message)`, and rendered as red text in the navbar.
@@ -624,14 +638,14 @@ On any thrown error, the message is caught, stored via `setGoError(message)`, an
 
 This one chains **three** backend calls, because to show a pitcher's matchup stats you first need to know who he's facing tonight.
 
-1. `handleGoClick()` runs, `position !== "Hitter"`, so the pitcher branch executes.
+1. `handleGoClick()` runs, `position !== "Batter"`, so the pitcher branch executes.
 2. **Read the pitcher's team** from `selectedSearchPlayer.team_abbrev` (the column `assign_teams()` populated). If missing:
    → throw `"Player team not set — run statcast ingest for team data"`
 3. **Check the schedule** already in state. If `scheduleGames.length === 0`:
    → throw `scheduleError ?? "No games on today's schedule"`
 4. **Find tonight's game** with `findGameForTeam(scheduleGames, teamAbbrev)`. This scans the games and compares the pitcher's abbreviation against each game's `home_abbrev` and `away_abbrev` using `abbrevsMatch`, which consults `ABBREV_ALIASES` so `OAK` and `ATH` are treated as the same club. If nothing matches:
    → throw `` `No game found for team ${teamAbbrev} today` ``
-5. **Decide which lineup to fetch** with `lineupSideForPitcher(teamAbbrev, game)`. The logic is inverted on purpose: if the pitcher is on the **home** team, you want the **away** lineup, because those are the nine hitters he will face.
+5. **Decide which lineup to fetch** with `lineupSideForPitcher(teamAbbrev, game)`. The logic is inverted on purpose: if the pitcher is on the **home** team, you want the **away** lineup, because those are the nine Batters he will face.
 6. **Fetch the lineup** — first backend call of this flow:
    ```ts
    const { starters } = await getLineup(game.game_pk, side);
@@ -643,7 +657,7 @@ This one chains **three** backend calls, because to show a pitcher's matchup sta
    game = statsapi.get("game", {"gamePk": game_pk})
    players = game["liveData"]["boxscore"]["teams"][side]["players"]
    ```
-   It then identifies starters by `battingOrder`: MLB encodes the batting order as a string where a **starter** in slot *n* is `"n00"` (`"100"`, `"200"`, …) and substitutes get `"101"`, `"102"`, etc. So the filter is "`battingOrder` exists and ends with `00`". The list is sorted by `int(batting_order)` to put it in 1-through-9 order.
+   It then identifies starters by `battingOrder`: MLB encodes the batting order as a string where a **starter** in slot _n_ is `"n00"` (`"100"`, `"200"`, …) and substitutes get `"101"`, `"102"`, etc. So the filter is "`battingOrder` exists and ends with `00`". The list is sorted by `int(batting_order)` to put it in 1-through-9 order.
 9. The router checks `len(starters) < 9` and raises **HTTP 422** with detail `"Lineup not available yet (N starters found)"` — this is the case where lineups haven't been posted yet.
 10. `getLineup` in `api.ts` handles that specially: on a non-OK response it parses the body and throws an `Error` carrying the backend's `detail` string, so the user sees the real reason rather than a generic failure.
 11. **Flatten to nine IDs:** `const ids = starters.map(s => String(s.player_id))`.
@@ -651,19 +665,26 @@ This one chains **three** backend calls, because to show a pitcher's matchup sta
     ```ts
     stats = await getPitcherStats(
       String(playerIdForGo),
-      ids[0], ids[1], ids[2], ids[3], ids[4],
-      ids[5], ids[6], ids[7], ids[8],
+      ids[0],
+      ids[1],
+      ids[2],
+      ids[3],
+      ids[4],
+      ids[5],
+      ids[6],
+      ids[7],
+      ids[8],
       String(game.game_pk),
     );
     ```
-    → `GET http://localhost:8000/stats/pitcher/657277?hitter_one=…&hitter_nine=…&game_pk=823244`
-13. FastAPI routes to `get_pitcher_stats()`, which declares eleven query parameters (`hitter_one` … `hitter_nine`, `game_pk`) plus the path parameter.
+    → `GET http://localhost:8000/stats/pitcher/657277?Batter_one=…&Batter_nine=…&game_pk=823244`
+13. FastAPI routes to `get_pitcher_stats()`, which declares eleven query parameters (`Batter_one` … `Batter_nine`, `game_pk`) plus the path parameter.
 14. The handler does two things:
     - `calculate_era(pitcher_id, game_pk)` — which internally makes a **third** external call to the MLB Stats API for earned runs, and runs the innings-pitched reconstruction against SQLite.
-    - Nine calls to `calculate_stats(career_vs_pitcher(hitter_n, pitcher_id))`, one per lineup slot. Note the argument order: `career_vs_pitcher(batter_id, pitcher_id)` is reused from the hitter side, just called nine times with the pitcher held constant.
-15. Response: `{ era, career_vs_hitter_one, …, career_vs_hitter_nine }`.
-16. Same as the hitter flow: `onGoClick({ name, stats, position })` → `App` writes it into the focused slot → `PlayerContainer` re-renders.
-17. `PlayerContainer` sees `position !== "Hitter"`, selects `PITCHER_STATLINE_KEYS`, and renders `era` first as a special case (a single number formatted with `.toFixed(2)`, or `"—"` when `null`) followed by the nine hitter matchup lines through `formatStatline`.
+    - Nine calls to `calculate_stats(career_vs_pitcher(Batter_n, pitcher_id))`, one per lineup slot. Note the argument order: `career_vs_pitcher(batter_id, pitcher_id)` is reused from the Batter side, just called nine times with the pitcher held constant.
+15. Response: `{ era, career_vs_Batter_one, …, career_vs_Batter_nine }`.
+16. Same as the Batter flow: `onGoClick({ name, stats, position })` → `App` writes it into the focused slot → `PlayerContainer` re-renders.
+17. `PlayerContainer` sees `position !== "Batter"`, selects `PITCHER_STATLINE_KEYS`, and renders `era` first as a special case (a single number formatted with `.toFixed(2)`, or `"—"` when `null`) followed by the nine Batter matchup lines through `formatStatline`.
 
 #### Flow F — Bookmarking (BB) and deleting (DEL)
 
@@ -680,26 +701,26 @@ Entirely client-side; no backend involvement.
 
 Also purely client-side.
 
-- Clicking **1** or **2** in `MainContent` calls `onFocusChange(slot)` → `setFocusedSlot`. This determines which slot the *next* GO result is written into, and drives the accent border/glow styling on the focused panel.
+- Clicking **1** or **2** in `MainContent` calls `onFocusChange(slot)` → `setFocusedSlot`. This determines which slot the _next_ GO result is written into, and drives the accent border/glow styling on the focused panel.
 - The **H / P** toggle in `Sidebar` calls `onHpFilterChange` → `setHpFilter`. Right now this only changes button styling; it does **not** filter the bookmark list. That filtering is unimplemented.
 
 ### 5.3 Quick request reference
 
-| User action | Frontend function | HTTP request | Backend handler |
-|---|---|---|---|
-| App loads | `getSchedule()` | `GET /schedule` | `schedule.get_schedule` |
-| Type in search | `searchPlayers(name)` | `GET /players/search?name=` | `players.search_players` |
-| GO (hitter) | `getHitterStats(...)` | `GET /stats/hitter/{id}?pitcher_id=&hand=&pitch_type=&ballpark=` | `stats.get_batter_stats` |
-| GO (pitcher), step 1 | `getLineup(gamePk, side)` | `GET /stats/lineup?game_pk=&side=` | `stats.get_lineup` |
-| GO (pitcher), step 2 | `getPitcherStats(...)` | `GET /stats/pitcher/{id}?hitter_one…nine=&game_pk=` | `stats.get_pitcher_stats` |
-| *(unused)* | `getPlayer(playerId)` | `GET /players/{player_id}` | `players.get_player` |
-| *(unused by UI)* | — | `POST /schedule/refresh` | `schedule.post_refresh_schedule` |
+| User action          | Frontend function         | HTTP request                                                     | Backend handler                  |
+| -------------------- | ------------------------- | ---------------------------------------------------------------- | -------------------------------- |
+| App loads            | `getSchedule()`           | `GET /schedule`                                                  | `schedule.get_schedule`          |
+| Type in search       | `searchPlayers(name)`     | `GET /players/search?name=`                                      | `players.search_players`         |
+| GO (Batter)          | `getBatterStats(...)`     | `GET /stats/Batter/{id}?pitcher_id=&hand=&pitch_type=&ballpark=` | `stats.get_batter_stats`         |
+| GO (pitcher), step 1 | `getLineup(gamePk, side)` | `GET /stats/lineup?game_pk=&side=`                               | `stats.get_lineup`               |
+| GO (pitcher), step 2 | `getPitcherStats(...)`    | `GET /stats/pitcher/{id}?Batter_one…nine=&game_pk=`              | `stats.get_pitcher_stats`        |
+| _(unused)_           | `getPlayer(playerId)`     | `GET /players/{player_id}`                                       | `players.get_player`             |
+| _(unused by UI)_     | —                         | `POST /schedule/refresh`                                         | `schedule.post_refresh_schedule` |
 
 ---
 
 ## 6. How the Project Got Here
 
-Rough chronology, reconstructed from the work history. Useful for remembering *why* certain things look the way they do.
+Rough chronology, reconstructed from the work history. Useful for remembering _why_ certain things look the way they do.
 
 1. **Ingestion first (March 2026).** Built `ingest_statcast.py` against `pybaseball`. Most of the early debugging was pandas-to-SQLite friction: only 10 of 334 players inserting, only the first pitch of a day inserting repeatedly, `pandas.Series` → `int`/`str` conversion, and `INSERT OR REPLACE` silently wiping columns. Also built out `schema.sql` including the 30-team `ballparks` seed.
 
@@ -711,7 +732,7 @@ Rough chronology, reconstructed from the work history. Useful for remembering *w
 
 5. **First endpoints (April 2026).** Built `/players/search` and the original `/stats/{batter_id}`. Debugged 500s in `/search`, then decided to move SQL out of the router into a service layer. Built `api.ts` as the single network layer rather than calling `fetch` inside components.
 
-6. **Stat lines end to end (April–May 2026).** Split `stats_service.py` into `batter_stats_service.py`, added the eight hitter splits, fixed `ZeroDivisionError` in `calculate_stats` and a missing `conn = get_db()` in `get_year()`, then wired the results into `PlayerContainer` with `formatStatline`. Fixed React key warnings and several null-handling crashes for the "no player selected yet" state.
+6. **Stat lines end to end (April–May 2026).** Split `stats_service.py` into `batter_stats_service.py`, added the eight Batter splits, fixed `ZeroDivisionError` in `calculate_stats` and a missing `conn = get_db()` in `get_year()`, then wired the results into `PlayerContainer` with `formatStatline`. Fixed React key warnings and several null-handling crashes for the "no player selected yet" state.
 
 7. **Pitcher support (May–June 2026).** Added `team_abbrev` to `players` and `assign_teams()` to populate it (including reworking an O(n²) first attempt). Built the innings-pitched reconstruction, then pulled earned runs from MLB StatsAPI because Statcast can't tell earned from unearned. Added `schedule_service.py` and the `/schedule` + `/stats/lineup` endpoints so the pitcher GO flow could find tonight's opposing lineup automatically.
 
@@ -731,7 +752,7 @@ Rough chronology, reconstructed from the work history. Useful for remembering *w
 The query in `api/routers/players.py` selects only `player_id, name_first, name_last, position`. But `Navbar.handleGoClick` reads `selectedSearchPlayer.team_abbrev` to find tonight's game — so for any pitcher it will be `undefined` and immediately throw `"Player team not set — run statcast ingest for team data"`. The `Player` type in `api.ts` already declares `team_abbrev?`, and the column exists in the table. Adding it to the `SELECT` list is a one-line fix.
 
 **2. `season_vs_offspeed` will always come back empty.**
-The ingest converts pitch codes to integers via `PITCH_TYPES` (`CH` → `10`), so `pitches.pitch_type` holds `"10"`. But the frontend sends `TEST_PITCH_TYPE = "CH"` and the query does `WHERE pitch_type = ?`. The two never match. Either send the integer ID from the frontend, or join through `pitch_type_class` — the better version being to use `is_offspeed = 1` so the split covers *all* offspeed pitches rather than one pitch type.
+The ingest converts pitch codes to integers via `PITCH_TYPES` (`CH` → `10`), so `pitches.pitch_type` holds `"10"`. But the frontend sends `TEST_PITCH_TYPE = "CH"` and the query does `WHERE pitch_type = ?`. The two never match. Either send the integer ID from the frontend, or join through `pitch_type_class` — the better version being to use `is_offspeed = 1` so the split covers _all_ offspeed pitches rather than one pitch type.
 
 **3. ERA mixes single-game earned runs with career innings.**
 `calculate_era` divides `get_earned_runs(pitcher, game_pk)` — one game — by `calculate_innings_pitched(pitcher)` — every date in the database. The resulting number isn't a meaningful ERA. Decide which you want (single-game ERA, or season ERA summed across games) and make both halves agree.
@@ -741,7 +762,7 @@ In `ingest_statcast.py` the line reads `pitches_df["des"].iat[1]` instead of `.i
 
 ### Smaller cleanups
 
-- **Hardcoded placeholders in the hitter path.** `TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK` in `Navbar.tsx` should come from the schedule (opposing probable pitcher, his handedness, and the home team's park) the same way the pitcher path already does.
+- **Hardcoded placeholders in the Batter path.** `TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK` in `Navbar.tsx` should come from the schedule (opposing probable pitcher, his handedness, and the home team's park) the same way the pitcher path already does.
 - **Search has no debounce and no error handling.** `handleInput` fires a request per keystroke and has no try/catch, so a failed search produces an unhandled promise rejection.
 - **No 9-starter guard on the frontend.** The backend returns 422 for short lineups, but `ids[0]`…`ids[8]` would pass `undefined` if a partial list ever got through.
 - **Dead code.** `api/services/stats_service.py` (exact duplicate of `batter_stats_service.py`), `api/routers/games.py` (empty, unmounted), `update_splits.py` (broken WIP), and the string branch of `App.handleGoClick` along with `selectedTeam`, which is never set.
@@ -754,4 +775,4 @@ In `ingest_statcast.py` the line reads `pitches_df["des"].iat[1]` instead of `.i
 
 - **Trends panel.** The intended next feature. The plan: add a trends endpoint that returns time-series JSON (rolling AVG, OPS by date, velocity by game), then render it with Recharts inside `PlayerContainer`.
 - **Populate the pre-aggregate tables.** Ten rollup tables and their indexes already exist in `schema.sql`. Filling them would replace the current pattern of pulling full pitch rows into Python and reducing them per request.
-- **Ideas noted in the ingest file:** combined hitter-vs-pitching-staff probabilities, a machine-learning layer, moving off SQLite to DuckDB for analytics, deploying to a VM, and parallelizing ingestion across multiple days.
+- **Ideas noted in the ingest file:** combined Batter-vs-pitching-staff probabilities, a machine-learning layer, moving off SQLite to DuckDB for analytics, deploying to a VM, and parallelizing ingestion across multiple days.
