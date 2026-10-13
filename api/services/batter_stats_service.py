@@ -1,4 +1,5 @@
 from api.database import get_db
+import statsapi
 
 SINGLE_EVENT = {"single"}
 DOUBLE_EVENT = {"double"}
@@ -57,18 +58,22 @@ def calculate_stats(plate_apps: list) -> list:
     home_run = 0
     rbi = 0
     for plate_app in plate_apps:
-        print(plate_app)
-        print("--------------------------------")
-        pa += 1 if plate_app["event"] in PA_EVENTS else 0
-        ab += 1 if plate_app["event"] in AB_EVENTS else 0
-        bb += 1 if plate_app["event"] in BB_EVENTS else 0
-        hbp += 1 if plate_app["event"] in HBP_EVENT else 0
-        k += 1 if plate_app["event"] in K_EVENTS else 0
-        single += 1 if plate_app["event"] in SINGLE_EVENT else 0
-        double += 1 if plate_app["event"] in DOUBLE_EVENT else 0
-        triples += 1 if plate_app["event"] in TRIPLE_EVENT else 0
-        home_run += 1 if plate_app["event"] in HOME_RUN_EVENT else 0
-        rbi += int(plate_app["rbi"])
+        pa += 1 if plate_app["events"] in PA_EVENTS else 0
+        ab += 1 if plate_app["events"] in AB_EVENTS else 0
+        bb += 1 if plate_app["events"] in BB_EVENTS else 0
+        hbp += 1 if plate_app["events"] in HBP_EVENT else 0
+        k += 1 if plate_app["events"] in K_EVENTS else 0
+        single += 1 if plate_app["events"] in SINGLE_EVENT else 0
+        double += 1 if plate_app["events"] in DOUBLE_EVENT else 0
+        triples += 1 if plate_app["events"] in TRIPLE_EVENT else 0
+        home_run += 1 if plate_app["events"] in HOME_RUN_EVENT else 0
+        # if plate_app["events"] == "field_error" and plate_app["outs_when_up"] == 2:
+        #     continue
+        # rbi += plate_app["post_bat_score"] - plate_app["bat_score"]
+        if plate_app["post_bat_score"] > plate_app["bat_score"]:
+            num_rbi = statsapi.get("game", {"gamePk": plate_app["game_pk"]})["liveData"]["plays"]["allPlays"][plate_app["at_bat_number"]- 1]["result"]["rbi"]
+            rbi += num_rbi
+
     hits = single + double + triples + home_run
     avg = hits / ab if ab else 0.0
     obp = (hits + bb + hbp) / pa if pa else 0.0
