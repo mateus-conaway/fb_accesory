@@ -18,7 +18,7 @@ Instead of just showing "Player X is hitting .270 this season," the app answers 
 
 The app pulls raw pitch-by-pitch Statcast data into a local SQLite database, computes these splits on demand, and displays two players side by side so you can compare them.
 
-**Core interaction model:** search for a player → pick a slot (1 or 2) → press **GO** → the app fetches that player's stat lines and renders them in the slot. Players you care about can be bookmarked into a "My Players" sidebar.
+**Core interaction model:** search for a player → press **GO** → the app fetches that player's stat lines and renders them in the player container. Players you care about can be bookmarked into a "My Players" sidebar.
 
 ---
 
@@ -133,7 +133,7 @@ _(JSON, CSV, config, `.gitignore`, and image files are omitted per request. `nod
 | File            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`main.tsx`**  | Bootstrap. `ReactDOM.createRoot(...).render(<React.StrictMode><App /></React.StrictMode>)`.                                                                                                                                                                                                                                                                                                                                             |
-| **`App.tsx`**   | The root component and the **single source of truth for application state**: `bookmarkedPlayers`, `focusedSlot` (1 or 2), `playerSlot1`, `playerSlot2`, `hpFilter`, `scheduleGames`, `scheduleError`. Owns two effects: one that persists bookmarks to `localStorage` under the key `fb_bookmarked_players`, and one that fetches the schedule once on mount. Renders `Navbar`, `Sidebar`, and `MainContent`.                           |
+| **`App.tsx`**   | The root component and the **single source of truth for application state**: `bookmarkedPlayers`, `playerData`, `hpFilter`, `scheduleGames`, `scheduleError`. Owns two effects: one that persists bookmarks to `localStorage` under the key `fb_bookmarked_players`, and one that fetches the schedule once on mount. Renders `Navbar`, `Sidebar`, and `MainContent`.                           |
 | **`api.ts`**    | The entire network layer, isolated in one file. Exports the TypeScript types (`Player`, `ScheduleGame`, `ScheduleResponse`, `LineupStarter`, `BatterStatLines`, `PitcherStatLines`) and one function per backend endpoint. Also contains the pure helpers `abbrevsMatch`, `findGameForTeam`, and `lineupSideForPitcher`, which mirror the Python versions in `schedule_service.py`. `BASE_URL` is hardcoded to `http://localhost:8000`. |
 | **`index.css`** | Tailwind directives plus base layer styles: the `#1e1e1e` canvas background, `color-scheme: dark`, a custom `.bg-canvas` utility, and thin custom scrollbars.                                                                                                                                                                                                                                                                           |
 
@@ -141,10 +141,11 @@ _(JSON, CSV, config, `.gitignore`, and image files are omitted per request. `nod
 
 | Component                  | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **`Navbar.tsx`**           | The busiest component. Contains an internal (non-exported) `SearchBar` component and the **GO** button, which holds all the branching logic for fetching Batter vs pitcher stats. Local state: `selectedSearchPlayer`, `goLoading`, `goError`. Also holds four hardcoded placeholder constants (`TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK`) used for the Batter path.                                                                                                          |
+| **`Navbar.tsx`**           | Static top bar: logo, app title, and an account button. No props or state. |
+| **`PlayerSearch.tsx`**     | Contains an internal (non-exported) `SearchBar` component and the **GO** button, which holds all the branching logic for fetching Batter vs pitcher stats. Local state: `selectedSearchPlayer`, `goLoading`, `goError`. Also holds four hardcoded placeholder constants (`TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK`) used for the Batter path.                                                                                                          |
 | **`Sidebar.tsx`**          | The "My Players" panel. Renders a `BookmarkedPlayer` for each bookmark and an H/P toggle. Purely presentational — no state of its own.                                                                                                                                                                                                                                                                                                                                                                 |
 | **`BookmarkedPlayer.tsx`** | One bookmark row: player name, team, and a `DEL` button.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **`MainContent.tsx`**      | The slot selector (buttons "1" and "2") and the two side-by-side `PlayerContainer`s. Presentational.                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **`MainContent.tsx`**      | The `PlayerSearch` bar and GO button at the top, and a single `PlayerContainer` filling the rest of the space with a small margin. Presentational.                                                                                                                                                                                                                                                                                                                                                                                                   |
 | **`PlayerContainer.tsx`**  | One player panel. Displays the player name, a `BB` (bookmark) button, the **Statlines** panel (fixed at 35% height), and a **Trends** panel that currently shows "Coming soon". Contains `formatStatline()`, which turns the 15-number stat array from the backend into three human-readable lines, plus the `Batter_STATLINE_KEYS` / `PITCHER_STATLINE_KEYS` arrays that control which stat lines render and in what order. Handles `era` as a special case since it's a single number, not an array. |
 
 ---
@@ -507,7 +508,7 @@ Since you were learning this when you built it, here is the mental model.
 
    The backend responds with an `Access-Control-Allow-Origin` header, and the browser then permits the read. This is a **browser** rule only — `localhost:8000/docs` and `curl` work fine without it, which is a common source of "it works in the docs but not in my app" confusion.
 
-4. **React state.** Receiving JSON changes nothing on screen by itself. The value has to be written into state with a setter (`setPlayerSlot1(...)`), which triggers a re-render, which causes the component to display the new data. **Fetch → setState → re-render** is the loop.
+4. **React state.** Receiving JSON changes nothing on screen by itself. The value has to be written into state with a setter (`setPlayerData(...)`), which triggers a re-render, which causes the component to display the new data. **Fetch → setState → re-render** is the loop.
 
 **Why `api.ts` exists.** You could call `fetch()` directly inside components (that was your first version). Centralizing it means the `BASE_URL`, the query-string construction, the error handling, and the response types live in one file, so a backend change is a one-file edit rather than a hunt through components.
 
@@ -532,13 +533,13 @@ No user input, but everything in the pitcher flow depends on it.
 9. FastAPI serializes the dict to JSON and attaches the CORS headers.
 10. `response.ok` is true, so `api.ts` returns `response.json()`.
 11. Back in `App`, `.then()` runs `setScheduleGames(data.games)` and `setScheduleError(null)`.
-12. State change → re-render → `scheduleGames` is passed down to `Navbar` as a prop.
+12. State change → re-render → `scheduleGames` is passed down through `MainContent` to `PlayerSearch` as a prop.
 
 If the fetch fails (backend down, or `statsapi` failed at startup), `.catch()` sets `scheduleGames = []` and `scheduleError = "Schedule unavailable"`. Nothing appears broken until you press GO on a pitcher, at which point that message surfaces.
 
 #### Flow B — Typing in the search bar
 
-1. User types a character into the input in `SearchBar` (inside `Navbar.tsx`).
+1. User types a character into the input in `SearchBar` (inside `PlayerSearch.tsx`).
 2. React fires `onChange` → `handleInput(e)`.
 3. `setQuery(val)` updates the controlled input.
 4. If the value is empty or whitespace, `setSuggestions([])` and return.
@@ -572,18 +573,18 @@ No backend call.
 
 1. `onMouseDown` on the `<li>` fires `handleSelect(player)`.
 2. `setQuery("First Last")` fills the input; `setSuggestions([])` closes the dropdown.
-3. `onSelectPlayer({ player })` is called, which in `Navbar` does:
+3. `onSelectPlayer({ player })` is called, which in `PlayerSearch` does:
    - `setSelectedSearchPlayer(data.player)` — **this is the value GO depends on**
    - `setGoError(null)`
    - `onSearchSelect(data)` → `App.handleSearchSelect`
-4. `App.handleSearchSelect` writes the payload into `playerSlot1` or `playerSlot2` depending on `focusedSlot`.
+4. `App.handleSearchSelect` writes the payload into `playerData`.
 5. The GO button becomes enabled (`disabled={goLoading || !playerIdForGo}`).
 
 Note that the panel still shows the "Player Name" placeholder at this point — the object stored by this path is `{ player }`, which has no `.name` or `.stats`. Real data appears only after GO.
 
 #### Flow D — Pressing GO for a **Batter**
 
-1. Click fires `handleGoClick()` in `Navbar.tsx`.
+1. Click fires `handleGoClick()` in `PlayerSearch.tsx`.
 2. Guard: return immediately if there's no `selectedSearchPlayer`.
 3. `setGoLoading(true)`, `setGoError(null)`. The button renders `…` and disables itself.
 4. `selectedSearchPlayer.position === "Batter"` is true (that value came from the `players.position` column, which the ingest set), so the Batter branch runs:
@@ -621,8 +622,8 @@ Note that the panel still shows the "Player Name" placeholder at this point — 
     ```ts
     onGoClick({ name: "First Last", stats, position: "Batter" });
     ```
-11. `App.handleGoClick` sees an object with `.stats`, builds `{ name, stats, position }`, and writes it to `playerSlot1` or `playerSlot2` based on `focusedSlot`.
-12. Re-render: `App` → `MainContent` → the appropriate `PlayerContainer` receives the new `playerData`.
+11. `App.handleGoClick` sees an object with `.stats`, builds `{ name, stats, position }`, and writes it to `playerData`.
+12. Re-render: `App` → `MainContent` → `PlayerContainer` receives the new `playerData`.
 13. `PlayerContainer` reads `position === "Batter"`, selects `Batter_STATLINE_KEYS`, and maps over the eight keys. For each one it calls `formatStatline(arr)` and renders three lines:
     - `".284: 27/95"`
     - `"Outcome Breakdown: 18 singles, 5 doubles, 0 triples, 4 home runs, …"`
@@ -683,7 +684,7 @@ This one chains **three** backend calls, because to show a pitcher's matchup sta
     - `calculate_era(pitcher_id, game_pk)` — which internally makes a **third** external call to the MLB Stats API for earned runs, and runs the innings-pitched reconstruction against SQLite.
     - Nine calls to `calculate_stats(career_vs_pitcher(Batter_n, pitcher_id))`, one per lineup slot. Note the argument order: `career_vs_pitcher(batter_id, pitcher_id)` is reused from the Batter side, just called nine times with the pitcher held constant.
 15. Response: `{ era, career_vs_Batter_one, …, career_vs_Batter_nine }`.
-16. Same as the Batter flow: `onGoClick({ name, stats, position })` → `App` writes it into the focused slot → `PlayerContainer` re-renders.
+16. Same as the Batter flow: `onGoClick({ name, stats, position })` → `App` writes it into `playerData` → `PlayerContainer` re-renders.
 17. `PlayerContainer` sees `position !== "Batter"`, selects `PITCHER_STATLINE_KEYS`, and renders `era` first as a special case (a single number formatted with `.toFixed(2)`, or `"—"` when `null`) followed by the nine Batter matchup lines through `formatStatline`.
 
 #### Flow F — Bookmarking (BB) and deleting (DEL)
@@ -697,11 +698,10 @@ Entirely client-side; no backend involvement.
 5. `DEL` calls `onDelete(player)` → `App.handleDeleteBookmark` filters by `name` → the effect persists the shorter list.
 6. On the next page load, `loadBookmarks()` reads and parses that key during `useState` initialization, wrapped in try/catch so corrupt JSON falls back to `[]`.
 
-#### Flow G — Slot focus and the H/P toggle
+#### Flow G — The H/P toggle
 
 Also purely client-side.
 
-- Clicking **1** or **2** in `MainContent` calls `onFocusChange(slot)` → `setFocusedSlot`. This determines which slot the _next_ GO result is written into, and drives the accent border/glow styling on the focused panel.
 - The **H / P** toggle in `Sidebar` calls `onHpFilterChange` → `setHpFilter`. Right now this only changes button styling; it does **not** filter the bookmark list. That filtering is unimplemented.
 
 ### 5.3 Quick request reference
@@ -749,7 +749,7 @@ Rough chronology, reconstructed from the work history. Useful for remembering _w
 ### Blockers worth fixing first
 
 **1. `/players/search` doesn't return `team_abbrev`, which breaks the entire pitcher GO flow.**
-The query in `api/routers/players.py` selects only `player_id, name_first, name_last, position`. But `Navbar.handleGoClick` reads `selectedSearchPlayer.team_abbrev` to find tonight's game — so for any pitcher it will be `undefined` and immediately throw `"Player team not set — run statcast ingest for team data"`. The `Player` type in `api.ts` already declares `team_abbrev?`, and the column exists in the table. Adding it to the `SELECT` list is a one-line fix.
+The query in `api/routers/players.py` selects only `player_id, name_first, name_last, position`. But `PlayerSearch.handleGoClick` reads `selectedSearchPlayer.team_abbrev` to find tonight's game — so for any pitcher it will be `undefined` and immediately throw `"Player team not set — run statcast ingest for team data"`. The `Player` type in `api.ts` already declares `team_abbrev?`, and the column exists in the table. Adding it to the `SELECT` list is a one-line fix.
 
 **2. `season_vs_offspeed` will always come back empty.**
 The ingest converts pitch codes to integers via `PITCH_TYPES` (`CH` → `10`), so `pitches.pitch_type` holds `"10"`. But the frontend sends `TEST_PITCH_TYPE = "CH"` and the query does `WHERE pitch_type = ?`. The two never match. Either send the integer ID from the frontend, or join through `pitch_type_class` — the better version being to use `is_offspeed = 1` so the split covers _all_ offspeed pitches rather than one pitch type.
@@ -762,7 +762,7 @@ In `ingest_statcast.py` the line reads `pitches_df["des"].iat[1]` instead of `.i
 
 ### Smaller cleanups
 
-- **Hardcoded placeholders in the Batter path.** `TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK` in `Navbar.tsx` should come from the schedule (opposing probable pitcher, his handedness, and the home team's park) the same way the pitcher path already does.
+- **Hardcoded placeholders in the Batter path.** `TEST_PITCHER_ID`, `TEST_HAND`, `TEST_PITCH_TYPE`, `TEST_BALLPARK` in `PlayerSearch.tsx` should come from the schedule (opposing probable pitcher, his handedness, and the home team's park) the same way the pitcher path already does.
 - **Search has no debounce and no error handling.** `handleInput` fires a request per keystroke and has no try/catch, so a failed search produces an unhandled promise rejection.
 - **No 9-starter guard on the frontend.** The backend returns 422 for short lineups, but `ids[0]`…`ids[8]` would pass `undefined` if a partial list ever got through.
 - **Dead code.** `api/services/stats_service.py` (exact duplicate of `batter_stats_service.py`), `api/routers/games.py` (empty, unmounted), `update_splits.py` (broken WIP), and the string branch of `App.handleGoClick` along with `selectedTeam`, which is never set.

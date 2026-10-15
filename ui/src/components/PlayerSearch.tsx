@@ -1,0 +1,234 @@
+import { useState, useRef, useEffect } from "react";
+import {
+  getBatterStats,
+  getPitcherStats,
+  getLineup,
+  searchPlayers,
+  findGameForTeam,
+  lineupSideForPitcher,
+} from "../api.ts";
+import type { ChangeEvent } from "react";
+import type {
+  GoPayload,
+  Player,
+  ScheduleGame,
+  SearchSelection,
+  StatLines,
+} from "../api.ts";
+
+/** Placeholder context until starting pitcher / park come from schedule data */
+const TEST_PITCHER_ID = "664954";
+const TEST_HAND = "R";
+const TEST_PITCH_TYPE = "FF";
+const TEST_BALLPARK = "COL";
+const TEST_BATTER_ONE = "500743";
+const TEST_BATTER_TWO = "518692";
+const TEST_BATTER_THREE = "571771";
+const TEST_BATTER_FOUR = "571970";
+const TEST_BATTER_FIVE = "605141";
+const TEST_BATTER_SIX = "606192";
+const TEST_BATTER_SEVEN = "660271";
+const TEST_BATTER_EIGHT = "663656";
+const TEST_BATTER_NINE = "669257";
+
+type SearchBarProps = {
+  onSelectPlayer?: (selection: SearchSelection) => void;
+};
+
+function SearchBar({ onSelectPlayer }: SearchBarProps) {
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Player[]>([]);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node | null;
+      if (wrapperRef.current && !wrapperRef.current.contains(target)) {
+        setSuggestions([]);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function handleInput(e: ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setQuery(val);
+    if (!val.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const results = await searchPlayers(val);
+    setSuggestions(results);
+  }
+
+  function handleSelect(player: Player) {
+    setQuery(`${player.name_first} ${player.name_last}`);
+    setSuggestions([]);
+    if (onSelectPlayer) onSelectPlayer({ player });
+  }
+
+  return (
+    <div ref={wrapperRef} className="relative flex-1 min-w-0 max-w-xl">
+      <div className="relative">
+        <svg
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+        <input
+          type="text"
+          value={query}
+          onChange={handleInput}
+          placeholder="Search players…"
+          className="w-full h-10 pl-10 pr-4 rounded-full bg-surface-raised border border-white/10 text-white placeholder-white/35 text-sm focus:outline-none focus:border-accent/50 focus:shadow-accent-glow-sm transition-all"
+        />
+      </div>
+      {suggestions.length > 0 && (
+        <ul className="absolute top-full left-0 right-0 z-[100] bg-surface-overlay border-2 border-white/25 rounded-2xl mt-2 max-h-64 overflow-y-auto shadow-[0_8px_32px_rgba(0,0,0,0.85)]">
+          {suggestions.map((player) => (
+            <li
+              key={player.player_id}
+              onMouseDown={() => handleSelect(player)}
+              className="px-4 py-2.5 text-sm text-white bg-surface-overlay cursor-pointer hover:bg-surface-hover first:rounded-t-2xl last:rounded-b-2xl transition-colors"
+            >
+              {player.name_first} {player.name_last}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+type PlayerSearchProps = {
+  onGoClick: (payload: GoPayload) => void;
+  onSearchSelect?: (selection: SearchSelection) => void;
+  scheduleGames: ScheduleGame[];
+  scheduleError: string | null;
+};
+
+export default function PlayerSearch({
+  onGoClick,
+  onSearchSelect,
+  scheduleGames,
+  scheduleError,
+}: PlayerSearchProps) {
+  const [selectedSearchPlayer, setSelectedSearchPlayer] =
+    useState<Player | null>(null);
+  const [goLoading, setGoLoading] = useState(false);
+  const [goError, setGoError] = useState<string | null>(null);
+
+  const playerIdForGo = selectedSearchPlayer?.player_id || "";
+
+  async function handleGoClick() {
+    if (!playerIdForGo || !selectedSearchPlayer) return;
+    setGoLoading(true);
+    setGoError(null);
+    try {
+      let stats: StatLines;
+      if (selectedSearchPlayer.position === "Batter") {
+        stats = await getBatterStats(
+          String(playerIdForGo),
+          TEST_PITCHER_ID,
+          TEST_HAND,
+          TEST_PITCH_TYPE,
+          TEST_BALLPARK,
+        );
+      } else if (selectedSearchPlayer.position === "Pitcher") {
+        stats = await getPitcherStats(
+          String(playerIdForGo),
+          TEST_BATTER_ONE,
+          TEST_BATTER_TWO,
+          TEST_BATTER_THREE,
+          TEST_BATTER_FOUR,
+          TEST_BATTER_FIVE,
+          TEST_BATTER_SIX,
+          TEST_BATTER_SEVEN,
+          TEST_BATTER_EIGHT,
+          TEST_BATTER_NINE,
+        );
+      } else {
+        const teamAbbrev = selectedSearchPlayer.team_abbrev;
+        if (!teamAbbrev) {
+          throw new Error(
+            "Player team not set — run statcast ingest for team data",
+          );
+        }
+        if (scheduleGames.length === 0) {
+          throw new Error(scheduleError ?? "No games on today's schedule");
+        }
+        const game = findGameForTeam(scheduleGames, teamAbbrev);
+        if (!game) {
+          throw new Error(`No game found for team ${teamAbbrev} today`);
+        }
+        const side = lineupSideForPitcher(teamAbbrev, game);
+        const { starters } = await getLineup(game.game_pk, side);
+        const ids = starters.map((s) => String(s.player_id));
+        stats = await getPitcherStats(
+          String(playerIdForGo),
+          ids[0],
+          ids[1],
+          ids[2],
+          ids[3],
+          ids[4],
+          ids[5],
+          ids[6],
+          ids[7],
+          ids[8],
+          // String(game.game_pk),
+        );
+      }
+      const displayName = `${selectedSearchPlayer.name_first} ${selectedSearchPlayer.name_last}`;
+      onGoClick({
+        name: displayName,
+        stats,
+        position: selectedSearchPlayer.position,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "GO failed";
+      setGoError(message);
+      console.error(err);
+    } finally {
+      setGoLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3 px-1">
+      <SearchBar
+        onSelectPlayer={(selection) => {
+          setSelectedSearchPlayer(selection.player);
+          setGoError(null);
+          if (onSearchSelect) onSearchSelect(selection);
+        }}
+      />
+
+      <button
+        type="button"
+        onClick={() => void handleGoClick()}
+        disabled={goLoading || !playerIdForGo}
+        className="h-10 px-6 rounded-full bg-white text-neutral-900 text-sm font-bold border-2 border-white/90 hover:bg-neutral-100 disabled:bg-neutral-600 disabled:text-neutral-300 disabled:border-neutral-500 disabled:cursor-not-allowed transition-all shadow-md shrink-0"
+      >
+        {goLoading ? "…" : "GO"}
+      </button>
+
+      {goError && (
+        <span
+          className="text-xs text-red-400/90 truncate max-w-xs"
+          title={goError}
+        >
+          {goError}
+        </span>
+      )}
+    </div>
+  );
+}

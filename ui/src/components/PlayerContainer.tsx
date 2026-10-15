@@ -86,14 +86,11 @@ type PlayerContainerProps = {
   playerData: PlayerSlot | null;
 
   onBookmark?: (player: PlayerSlot | null) => void;
-
-  isFocused: boolean;
 };
 
 export default function PlayerContainer({
   playerData,
   onBookmark,
-  isFocused,
 }: PlayerContainerProps) {
   const displayName = playerData ? playerData.name : "Player Name";
 
@@ -110,18 +107,8 @@ export default function PlayerContainer({
     position === "Batter" ? Batter_STATLINE_KEYS : PITCHER_STATLINE_KEYS;
 
   return (
-    <div
-      className={`flex flex-col flex-1 min-w-0 rounded-2xl border transition-all overflow-hidden shadow-card ${
-        isFocused
-          ? "border-accent/60 shadow-accent-glow bg-surface"
-          : "border-white/10 bg-surface opacity-75"
-      }`}
-    >
-      <div
-        className={`flex items-center justify-between px-4 py-3 border-b border-white/10 ${
-          isFocused ? "bg-surface-card" : "bg-surface-raised"
-        }`}
-      >
+    <div className="flex flex-col flex-1 min-w-0 rounded-2xl border border-accent/60 shadow-accent-glow bg-surface overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-surface-card">
         <span className="font-semibold text-sm text-white/90 truncate">
           {displayName}
         </span>
@@ -135,23 +122,43 @@ export default function PlayerContainer({
         </button>
       </div>
 
-      <div
-        className="flex flex-col border-b border-white/10 bg-surface-raised min-h-0"
-        style={{ flex: "0 0 35%" }}
-      >
-        <span className="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-white/35 uppercase shrink-0">
-          Statlines
-        </span>
+      <div className="flex flex-1 min-h-0">
+        <div className="flex flex-col flex-1 min-w-0 min-h-0 border-r border-white/10 bg-surface-raised">
+          <span className="px-4 pt-3 pb-1.5 text-[10px] font-semibold tracking-widest text-white/35 uppercase shrink-0">
+            Statlines
+          </span>
 
-        <div className="flex-1 overflow-y-auto px-4 pb-3 space-y-3">
-          {!stats ? (
-            <p className="text-xs text-white/35">
-              Select a player and click GO
-            </p>
-          ) : (
-            keys.map((key) => {
-              if (key === "era") {
-                const era = statValues?.era;
+          <div className="flex-1 overflow-y-auto px-4 pb-3 space-y-3">
+            {!stats ? (
+              <p className="text-xs text-white/35">
+                Select a player and click GO
+              </p>
+            ) : (
+              keys.map((key) => {
+                if (key === "era") {
+                  const era = statValues?.era;
+
+                  return (
+                    <div
+                      key={key}
+                      className="rounded-xl bg-surface-card border border-white/5 px-3 py-2"
+                    >
+                      <div className="text-[10px] font-semibold tracking-wide text-accent/80 uppercase mb-1">
+                        {key}
+                      </div>
+
+                      <div className="text-xs text-white/70 leading-snug">
+                        {typeof era === "number" ? era.toFixed(2) : "—"}
+                      </div>
+                    </div>
+                  );
+                }
+
+                const arr = statValues?.[key];
+
+                if (!Array.isArray(arr)) return null;
+
+                const lines = formatStatline(arr);
 
                 return (
                   <div
@@ -159,53 +166,32 @@ export default function PlayerContainer({
                     className="rounded-xl bg-surface-card border border-white/5 px-3 py-2"
                   >
                     <div className="text-[10px] font-semibold tracking-wide text-accent/80 uppercase mb-1">
-                      {key}
+                      {key.replace(/_/g, " ")}
                     </div>
 
-                    <div className="text-xs text-white/70 leading-snug">
-                      {typeof era === "number" ? era.toFixed(2) : "—"}
-                    </div>
+                    {lines.map((line) => (
+                      <div
+                        key={line.slice(0, 20)}
+                        className="text-xs text-white/60 leading-snug"
+                      >
+                        {line}
+                      </div>
+                    ))}
                   </div>
                 );
-              }
-
-              const arr = statValues?.[key];
-
-              if (!Array.isArray(arr)) return null;
-
-              const lines = formatStatline(arr);
-
-              return (
-                <div
-                  key={key}
-                  className="rounded-xl bg-surface-card border border-white/5 px-3 py-2"
-                >
-                  <div className="text-[10px] font-semibold tracking-wide text-accent/80 uppercase mb-1">
-                    {key.replace(/_/g, " ")}
-                  </div>
-
-                  {lines.map((line) => (
-                    <div
-                      key={line.slice(0, 20)}
-                      className="text-xs text-white/60 leading-snug"
-                    >
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              );
-            })
-          )}
+              })
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col flex-1 bg-surface">
-        <span className="px-4 pt-3 text-[10px] font-semibold tracking-widest text-white/35 uppercase">
-          Trends
-        </span>
+        <div className="flex flex-col flex-1 min-w-0 bg-surface">
+          <span className="px-4 pt-3 text-[10px] font-semibold tracking-widest text-white/35 uppercase">
+            Trends
+          </span>
 
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-xs text-white/25">Coming soon</p>
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-xs text-white/25">Coming soon</p>
+          </div>
         </div>
       </div>
     </div>

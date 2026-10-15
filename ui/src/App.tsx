@@ -14,7 +14,6 @@ import type {
   PlayerSlot,
   ScheduleGame,
   SearchSelection,
-  Slot,
 } from "./api.ts";
 
 
@@ -56,11 +55,7 @@ export default function App() {
   const [bookmarkedPlayers, setBookmarkedPlayers] =
     useState<PlayerSlot[]>(loadBookmarks);
 
-  const [focusedSlot, setFocusedSlot] = useState<Slot>(1);
-
-  const [playerSlot1, setPlayerSlot1] = useState<PlayerSlot | null>(null);
-
-  const [playerSlot2, setPlayerSlot2] = useState<PlayerSlot | null>(null);
+  const [playerData, setPlayerData] = useState<PlayerSlot | null>(null);
 
   const [hpFilter, setHpFilter] = useState<HpFilter>("H");
 
@@ -104,19 +99,19 @@ export default function App() {
 
 
 
-  function handleBookmark(playerData: PlayerSlot | null) {
+  function handleBookmark(player: PlayerSlot | null) {
 
-    if (!playerData) return;
+    if (!player) return;
 
     const alreadyBookmarked = bookmarkedPlayers.some(
 
-      (p) => p.name === playerData.name,
+      (p) => p.name === player.name,
 
     );
 
     if (alreadyBookmarked) return;
 
-    setBookmarkedPlayers((prev) => [...prev, playerData]);
+    setBookmarkedPlayers((prev) => [...prev, player]);
 
   }
 
@@ -136,7 +131,7 @@ export default function App() {
 
     if (typeof payload === "object" && payload.stats) {
 
-      const playerData = {
+      setPlayerData({
 
         name: payload.name,
 
@@ -144,17 +139,7 @@ export default function App() {
 
         position: payload.position,
 
-      };
-
-      if (focusedSlot === 1) {
-
-        setPlayerSlot1(playerData);
-
-      } else {
-
-        setPlayerSlot2(playerData);
-
-      }
+      });
 
       return;
 
@@ -162,17 +147,7 @@ export default function App() {
 
     if (typeof payload === "string" && payload) {
 
-      const playerData = { name: payload, team: selectedTeam };
-
-      if (focusedSlot === 1) {
-
-        setPlayerSlot1(playerData);
-
-      } else {
-
-        setPlayerSlot2(playerData);
-
-      }
+      setPlayerData({ name: payload, team: selectedTeam });
 
     }
 
@@ -182,7 +157,7 @@ export default function App() {
 
   function handleSearchSelect({ player }: SearchSelection) {
 
-    const playerData: PlayerSlot = {
+    setPlayerData({
 
       name: `${player.name_first} ${player.name_last}`,
 
@@ -190,17 +165,7 @@ export default function App() {
 
       team: player.team_abbrev ?? undefined,
 
-    };
-
-    if (focusedSlot === 1) {
-
-      setPlayerSlot1(playerData);
-
-    } else {
-
-      setPlayerSlot2(playerData);
-
-    }
+    });
 
   }
 
@@ -210,17 +175,7 @@ export default function App() {
 
     <div className="flex flex-col h-screen bg-canvas overflow-hidden">
 
-      <Navbar
-
-        onGoClick={handleGoClick}
-
-        onSearchSelect={handleSearchSelect}
-
-        scheduleGames={scheduleGames}
-
-        scheduleError={scheduleError}
-
-      />
+      <Navbar />
 
 
 
@@ -242,15 +197,17 @@ export default function App() {
 
         <MainContent
 
-          focusedSlot={focusedSlot}
-
-          onFocusChange={setFocusedSlot}
-
-          playerSlot1={playerSlot1}
-
-          playerSlot2={playerSlot2}
+          playerData={playerData}
 
           onBookmark={handleBookmark}
+
+          onGoClick={handleGoClick}
+
+          onSearchSelect={handleSearchSelect}
+
+          scheduleGames={scheduleGames}
+
+          scheduleError={scheduleError}
 
         />
 

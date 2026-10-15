@@ -107,7 +107,7 @@ export type PitcherStatLines = {
 
 export type StatLines = BatterStatLines | PitcherStatLines;
 
-/** A player as displayed in one of the two comparison slots */
+/** A player as displayed in the player container */
 export type PlayerSlot = {
   name: string;
   stats?: StatLines;
@@ -123,8 +123,6 @@ export type GoPayload =
 export type SearchSelection = {
   player: Player;
 };
-
-export type Slot = 1 | 2;
 
 export type HpFilter = "H" | "P";
 
